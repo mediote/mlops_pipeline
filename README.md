@@ -6,24 +6,22 @@ Este projeto é responsável por controlar a execução de um pipeline de MLOps 
 
 ```plaintext
 mlops_pipeline/
-├── mlops_pipeline/
+├── __init__.py
+├── steps/
 │   ├── __init__.py
-│   ├── main.py
-│   ├── pipeline.py
-│   ├── models.py
-│   ├── utils.py
-│   └── storage.py
-├── tests/
+│   ├── inicializa_pipeline.py
+│   ├── treina_avalia_modelos.py
+│   └── monitora_drift_faz_predicoes.py
+├── models.py
+├── utils.py
+├── storage/
 │   ├── __init__.py
-│   ├── test_main.py
-│   ├── test_pipeline.py
-│   ├── test_models.py
-│   └── test_storage.py
-├── docs/
-│   ├── index.md
-│   └── ...
-├── .gitignore
-├── README.md
-├── requirements.txt
-├── setup.py
-└── tox.ini
+│   ├── storage_base.py
+│   └── storage_factory.py
+└── tests/
+    ├── __init__.py
+    └── steps/
+        ├── __init__.py
+        ├── test_inicializa_pipeline.py
+        ├── test_treina_avalia_modelos.py
+        └── test_monitora_drift_faz_predicoes.py
