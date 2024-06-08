@@ -3,8 +3,8 @@ from pyspark.sql import SparkSession
 
 
 class Storage:
-    def __init__(self, base_path):
-        self.base_path = base_path
+    def __init__(self, delta_path):
+        self.delta_path = delta_path
         self.spark = SparkSession.builder.appName("mlopsutils").getOrCreate()
 
     def obtem_estado_execucao_atual_pipeline(self, delta_path: str, nome_modal: str, nome_projeto: str, nome_modelo: str) -> pd.DataFrame:

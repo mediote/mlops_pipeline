@@ -26,7 +26,7 @@ class InicializaPipelineParams(BaseModel):
     data_inicio_etapa_execucao_pipeline: datetime
 
 
-def inicializa_pipeline(storage: Storage, delta_path: str, params: dict) -> str:
+def inicializa_pipeline(storage: Storage, params: dict) -> str:
     try:
         validated_params = InicializaPipelineParams(**params)
     except ValidationError as e:
@@ -52,7 +52,7 @@ def inicializa_pipeline(storage: Storage, delta_path: str, params: dict) -> str:
     agora = datetime.now(saopaulo_timezone)
 
     execucao_atual = storage.obtem_estado_execucao_atual_pipeline(
-        delta_path, nome_modal, nome_projeto, nome_modelo)
+        nome_modal, nome_projeto, nome_modelo)
 
     if execucao_atual is not None:
         execucao_atual["percentual_restante_validade_modelo"] = obtem_percentual_restante_validade_modelo(
