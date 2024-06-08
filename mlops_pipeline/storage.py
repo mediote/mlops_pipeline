@@ -5,8 +5,8 @@ from pyspark.sql import SparkSession
 
 
 class Storage:
-    def __init__(self, base_path):
-        self.base_path = base_path
+    def __init__(self):
+        self.base_path = '/mnt/gold/MLOPS'
         self.spark = SparkSession.builder \
             .appName("mlopsutils") \
             .getOrCreate()
