@@ -45,14 +45,14 @@ def test_inicializa_pipeline_green_path(storage):
         "id_execucao_pipeline": [1]
     })
 
-    with patch('mlops_pipeline.storage.storage_factory.StorageFactory.create_storage') as mock_storage_factory, \
-            patch('mlops_pipeline.utils.obtem_percentual_restante_validade_modelo', return_value=100):
-        mock_storage_factory.return_value.load_dataframe.return_value = execucao_atual
+    with patch('mlops_pipeline.storage.Storage.obtem_estado_execucao_atual_pipeline', return_value=execucao_atual), \
+            patch('mlops_pipeline.utils.obtem_percentual_restante_validade_modelo', return_value=100), \
+            patch('mlops_pipeline.storage.Storage.grava_estado_execucao_atual_pipeline') as mock_save:
 
-        status = inicializa_pipeline(storage, params)
+        status = inicializa_pipeline(params)
 
         assert status == "green"
-        assert storage.save_dataframe.called
+        assert mock_save.called
 
 
 @pytest.mark.inicializa_pipeline
@@ -68,11 +68,10 @@ def test_inicializa_pipeline_red_path(storage):
         "id_execucao_pipeline": [1]
     })
 
-    with patch('mlops_pipeline.storage.storage_factory.StorageFactory.create_storage') as mock_storage_factory, \
+    with patch('mlops_pipeline.storage.Storage.obtem_estado_execucao_atual_pipeline', return_value=execucao_atual), \
             patch('mlops_pipeline.utils.obtem_percentual_restante_validade_modelo', return_value=100):
-        mock_storage_factory.return_value.load_dataframe.return_value = execucao_atual
 
-        status = inicializa_pipeline(storage, params)
+        status = inicializa_pipeline(params)
 
         assert status == "red"
 
@@ -90,14 +89,14 @@ def test_inicializa_pipeline_retraining_limit_exceeded(storage):
         "id_execucao_pipeline": [1]
     })
 
-    with patch('mlops_pipeline.storage.storage_factory.StorageFactory.create_storage') as mock_storage_factory, \
-            patch('mlops_pipeline.utils.obtem_percentual_restante_validade_modelo', return_value=100):
-        mock_storage_factory.return_value.load_dataframe.return_value = execucao_atual
+    with patch('mlops_pipeline.storage.Storage.obtem_estado_execucao_atual_pipeline', return_value=execucao_atual), \
+            patch('mlops_pipeline.utils.obtem_percentual_restante_validade_modelo', return_value=100), \
+            patch('mlops_pipeline.storage.Storage.grava_estado_execucao_atual_pipeline') as mock_save:
 
-        status = inicializa_pipeline(storage, params)
+        status = inicializa_pipeline(params)
 
         assert status == "red"
-        assert storage.save_dataframe.called
+        assert mock_save.called
 
 
 @pytest.mark.inicializa_pipeline
@@ -113,14 +112,14 @@ def test_inicializa_pipeline_validity_retraining(storage):
         "id_execucao_pipeline": [1]
     })
 
-    with patch('mlops_pipeline.storage.storage_factory.StorageFactory.create_storage') as mock_storage_factory, \
-            patch('mlops_pipeline.utils.obtem_percentual_restante_validade_modelo', return_value=100):
-        mock_storage_factory.return_value.load_dataframe.return_value = execucao_atual
+    with patch('mlops_pipeline.storage.Storage.obtem_estado_execucao_atual_pipeline', return_value=execucao_atual), \
+            patch('mlops_pipeline.utils.obtem_percentual_restante_validade_modelo', return_value=100), \
+            patch('mlops_pipeline.storage.Storage.grava_estado_execucao_atual_pipeline') as mock_save:
 
-        status = inicializa_pipeline(storage, params)
+        status = inicializa_pipeline(params)
 
         assert status == "yellow"
-        assert storage.save_dataframe.called
+        assert mock_save.called
 
 
 @pytest.mark.inicializa_pipeline
@@ -131,10 +130,10 @@ def test_inicializa_pipeline_initial_run(storage):
     """
     execucao_atual = pd.DataFrame()
 
-    with patch('mlops_pipeline.storage.storage_factory.StorageFactory.create_storage') as mock_storage_factory:
-        mock_storage_factory.return_value.load_dataframe.return_value = execucao_atual
+    with patch('mlops_pipeline.storage.Storage.obtem_estado_execucao_atual_pipeline', return_value=execucao_atual), \
+            patch('mlops_pipeline.storage.Storage.grava_estado_execucao_atual_pipeline') as mock_save:
 
-        status = inicializa_pipeline(storage, params)
+        status = inicializa_pipeline(params)
 
         assert status == "white"
-        assert storage.save_dataframe.called
+        assert mock_save.called

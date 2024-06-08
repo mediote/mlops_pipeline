@@ -4,7 +4,7 @@ import pandas as pd
 import pytz
 from pydantic import BaseModel, ValidationError
 
-from mlops_pipeline.storage.storage_factory import StorageFactory
+from mlops_pipeline.storage import Storage
 from mlops_pipeline.utils import obtem_percentual_restante_validade_modelo
 
 
@@ -26,11 +26,13 @@ class InicializaPipelineParams(BaseModel):
     data_inicio_etapa_execucao_pipeline: datetime
 
 
-def inicializa_pipeline(storage, params: dict) -> str:
+def inicializa_pipeline(params: dict) -> str:
     try:
         validated_params = InicializaPipelineParams(**params)
     except ValidationError as e:
         raise ValueError(f"Erro na validação dos parâmetros: {e}")
+
+    storage = Storage()
 
     nome_modal = validated_params.nome_modal
     nome_projeto = validated_params.nome_projeto
@@ -51,7 +53,8 @@ def inicializa_pipeline(storage, params: dict) -> str:
     saopaulo_timezone = pytz.timezone("America/Sao_Paulo")
     agora = datetime.now(saopaulo_timezone)
 
-    execucao_atual = storage.load_dataframe(f"tbl_controle_esteira_{tipo_esteira}")
+    execucao_atual = storage.obtem_estado_execucao_atual_pipeline(
+        nome_modal, nome_projeto, nome_modelo, tipo_esteira)
 
     if not execucao_atual.empty:
         execucao_atual["percentual_restante_validade_modelo"] = obtem_percentual_restante_validade_modelo(
@@ -67,8 +70,8 @@ def inicializa_pipeline(storage, params: dict) -> str:
                 execucao_atual["data_inicio_etapa_execucao_pipeline"] = data_inicio_etapa_execucao_pipeline
                 execucao_atual["data_fim_etapa_execucao_pipeline"] = datetime.now(
                     saopaulo_timezone)
-                storage.save_dataframe(
-                    execucao_atual, f"tbl_controle_esteira_{tipo_esteira}")
+                storage.grava_estado_execucao_atual_pipeline(
+                    execucao_atual, tipo_esteira)
                 return status_execucao_pipeline
             else:
                 return "red"
@@ -80,8 +83,7 @@ def inicializa_pipeline(storage, params: dict) -> str:
             execucao_atual["data_inicio_etapa_execucao_pipeline"] = data_inicio_etapa_execucao_pipeline
             execucao_atual["data_fim_etapa_execucao_pipeline"] = datetime.now(
                 saopaulo_timezone)
-            storage.save_dataframe(
-                execucao_atual, f"tbl_controle_esteira_{tipo_esteira}")
+            storage.grava_estado_execucao_atual_pipeline(execucao_atual, tipo_esteira)
             return "red"
         else:
             execucao_atual["id_execucao_pipeline"] = execucao_atual["id_execucao_pipeline"].iloc[0] + 1
@@ -94,9 +96,8 @@ def inicializa_pipeline(storage, params: dict) -> str:
             execucao_atual["data_inicio_etapa_execucao_pipeline"] = data_inicio_etapa_execucao_pipeline
             execucao_atual["data_fim_etapa_execucao_pipeline"] = datetime.now(
                 saopaulo_timezone)
-            storage.save_dataframe(
-                execucao_atual, f"tbl_controle_esteira_{tipo_esteira}")
-            return "white"
+            storage.grava_estado_execucao_atual_pipeline(execucao_atual, tipo_esteira)
+            return "yellow"
     else:
         execucao_atual = pd.DataFrame([{
             "id_experimento": 1,
@@ -137,5 +138,5 @@ def inicializa_pipeline(storage, params: dict) -> str:
             "tipo_esteira": tipo_esteira,
             "email_usuario": email_usuario
         }])
-        storage.save_dataframe(execucao_atual, f"tbl_controle_esteira_{tipo_esteira}")
+        storage.grava_estado_execucao_atual_pipeline(execucao_atual, tipo_esteira)
         return "white"
