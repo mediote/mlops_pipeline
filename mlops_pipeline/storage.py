@@ -69,19 +69,6 @@ class Storage:
         try:
             # Cria um Spark DataFrame a partir do pandas DataFrame
             sdf = self.spark.createDataFrame(execucao_atual)
-            # Converte para o esquema da tabela Delta
-            sdf = sdf.select(
-                "id_experimento", "nome_modal", "nome_projeto", "id_execucao_pipeline",
-                "id_etapa_execucao_pipeline", "etapa_execucao_pipeline", "status_execucao_pipeline",
-                "data_inicio_etapa_execucao_pipeline", "data_fim_etapa_execucao_pipeline", "resumo_execucao",
-                "nome_modelo", "versao_modelo", "tipo_modelo", "status_modelo", "data_validade_modelo",
-                "dias_validade_modelo", "percentual_restante_validade_modelo", "duracao_treinamento_modelo",
-                "qtd_linhas_treinamento", "qtd_linhas_predicao", "limiar_minino_acc", "valor_medido_acc",
-                "qtd_dias_treino_inicial", "qtd_dias_range_retreino_01", "qtd_dias_range_retreino_02",
-                "qtd_dias_range_retreino_03", "etapa_retreino_modelo", "qtd_permitida_retreino", "qtd_medida_retreino",
-                "limiar_maximo_drift", "valor_medido_drift", "nome_cluster_execucao", "utilizacao_cpu",
-                "utilizacao_gpu", "utilizacao_memoria", "tipo_esteira", "email_usuario", "data_criacao"
-            )
             # Escreve no Delta Lake
             sdf.write.format("delta").mode('append').save(self.delta_path)
         except Exception as e:
