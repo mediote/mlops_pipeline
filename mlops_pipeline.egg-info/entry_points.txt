@@ -1,2 +1,0 @@
-[console_scripts]
-run_pipeline = mlops_pipeline.main:run_pipeline
