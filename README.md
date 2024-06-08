@@ -22,5 +22,6 @@ mlops_pipeline/
 │   │   ├── __init__.py
 │   │   └── test_inicializa_pipeline.py
 ├── setup.py
+├── pyproject.toml
 ├── README.md
 ├── .gitignore
