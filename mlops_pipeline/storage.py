@@ -5,12 +5,12 @@ from pyspark.sql import SparkSession
 class Storage:
     def __init__(self, delta_path):
         self.delta_path = delta_path
-        self.spark = SparkSession.builder.appName("mlopsutils").getOrCreate()
+        self.spark = SparkSession.builder.appName("mlops_pipeline").getOrCreate()
 
-    def obtem_estado_execucao_atual_pipeline(self, delta_path: str, nome_modal: str, nome_projeto: str, nome_modelo: str) -> pd.DataFrame:
+    def obtem_estado_execucao_atual_pipeline(self, nome_modal: str, nome_projeto: str, nome_modelo: str) -> pd.DataFrame:
         try:
             # Carrega o DataFrame Delta
-            df = self.spark.read.format("delta").load(delta_path)
+            df = self.spark.read.format("delta").load(self.delta_path)
             # Filtra com base nos critérios fornecidos
             filtered_df = df.filter((df.nome_modal == nome_modal) &
                                     (df.nome_projeto == nome_projeto) &
@@ -27,7 +27,7 @@ class Storage:
         except Exception as e:
             raise Exception(f"Error accessing DataFrame: {e}")
 
-    def grava_estado_execucao_atual_pipeline(self, delta_path: str, execucao_atual: pd.DataFrame):
+    def grava_estado_execucao_atual_pipeline(self, execucao_atual: pd.DataFrame):
         try:
             # Cria um Spark DataFrame a partir do pandas DataFrame
             sdf = self.spark.createDataFrame(execucao_atual)
@@ -45,6 +45,6 @@ class Storage:
                 "utilizacao_gpu", "utilizacao_memoria", "tipo_esteira", "email_usuario", "data_criacao"
             )
             # Escreve no Delta Lake
-            sdf.write.format("delta").mode('append').save(delta_path)
+            sdf.write.format("delta").mode('append').save(self.delta_path)
         except Exception as e:
             raise Exception(f"Error inserting data into table: {e}")
