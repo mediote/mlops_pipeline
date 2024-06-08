@@ -26,13 +26,11 @@ class InicializaPipelineParams(BaseModel):
     data_inicio_etapa_execucao_pipeline: datetime
 
 
-def inicializa_pipeline(params: dict) -> str:
+def inicializa_pipeline(storage: Storage, params: dict) -> str:
     try:
         validated_params = InicializaPipelineParams(**params)
     except ValidationError as e:
         raise ValueError(f"Erro na validação dos parâmetros: {e}")
-
-    storage = Storage()
 
     nome_modal = validated_params.nome_modal
     nome_projeto = validated_params.nome_projeto
@@ -129,7 +127,7 @@ def inicializa_pipeline(params: dict) -> str:
             "etapa_retreino_modelo": 0,
             "qtd_permitida_retreino": qtd_permitida_retreino,
             "qtd_medida_retreino": 0,
-            "limiar_maximo_drift": limiar_maximo_drift,
+            "limiar_maximo_drift": 0,
             "valor_medido_drift": 0,
             "nome_cluster_execucao": "adb_dataops_ds_dev",
             "utilizacao_cpu": 0,
