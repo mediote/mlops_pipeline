@@ -1,3 +1,4 @@
+import pytz
 
 from mlops_pipeline.steps.inicializa_pipeline import inicializa_pipeline
 from mlops_pipeline.storage import Storage
