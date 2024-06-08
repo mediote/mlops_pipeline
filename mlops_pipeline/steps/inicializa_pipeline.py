@@ -1,7 +1,6 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pandas as pd
-import pytz
 from pydantic import BaseModel, ValidationError
 
 from mlops_pipeline.storage import Storage
@@ -13,20 +12,14 @@ class InicializaPipelineParams(BaseModel):
     nome_projeto: str
     nome_modelo: str
     tipo_modelo: str
-    dias_validade_modelo: int
-    qtd_dias_treino_inicial: int
-    qtd_dias_range_retreino_01: int
-    qtd_dias_range_retreino_02: int
-    qtd_dias_range_retreino_03: int
-    limiar_minino_acc: float
-    limiar_maximo_drift: float
-    qtd_permitida_retreino: int
     tipo_esteira: int
+    qtd_permitida_retreino: int
+    limiar_minino_acc: float
+    dias_validade_modelo: int
     email_usuario: str
-    data_inicio_etapa_execucao_pipeline: datetime
 
 
-def inicializa_pipeline(storage: Storage, params: dict) -> str:
+def inicializa_pipeline(storage: Storage, parquet_path: str, params: dict) -> str:
     try:
         validated_params = InicializaPipelineParams(**params)
     except ValidationError as e:
@@ -36,23 +29,18 @@ def inicializa_pipeline(storage: Storage, params: dict) -> str:
     nome_projeto = validated_params.nome_projeto
     nome_modelo = validated_params.nome_modelo
     tipo_modelo = validated_params.tipo_modelo
-    dias_validade_modelo = validated_params.dias_validade_modelo
-    qtd_dias_treino_inicial = validated_params.qtd_dias_treino_inicial
-    qtd_dias_range_retreino_01 = validated_params.qtd_dias_range_retreino_01
-    qtd_dias_range_retreino_02 = validated_params.qtd_dias_range_retreino_02
-    qtd_dias_range_retreino_03 = validated_params.qtd_dias_range_retreino_03
-    limiar_minino_acc = validated_params.limiar_minino_acc
-    limiar_maximo_drift = validated_params.limiar_maximo_drift
-    qtd_permitida_retreino = validated_params.qtd_permitida_retreino
     tipo_esteira = validated_params.tipo_esteira
+    qtd_permitida_retreino = validated_params.qtd_permitida_retreino
+    limiar_minino_acc = validated_params.limiar_minino_acc
+    dias_validade_modelo = validated_params.dias_validade_modelo
     email_usuario = validated_params.email_usuario
-    data_inicio_etapa_execucao_pipeline = validated_params.data_inicio_etapa_execucao_pipeline
 
     saopaulo_timezone = pytz.timezone("America/Sao_Paulo")
     agora = datetime.now(saopaulo_timezone)
+    data_inicio_etapa_execucao_pipeline = params['data_inicio_etapa_execucao_pipeline']
 
     execucao_atual = storage.obtem_estado_execucao_atual_pipeline(
-        nome_modal, nome_projeto, nome_modelo, tipo_esteira)
+        parquet_path, nome_modal, nome_projeto, nome_modelo)
 
     if not execucao_atual.empty:
         execucao_atual["percentual_restante_validade_modelo"] = obtem_percentual_restante_validade_modelo(
@@ -69,7 +57,7 @@ def inicializa_pipeline(storage: Storage, params: dict) -> str:
                 execucao_atual["data_fim_etapa_execucao_pipeline"] = datetime.now(
                     saopaulo_timezone)
                 storage.grava_estado_execucao_atual_pipeline(
-                    execucao_atual, tipo_esteira)
+                    parquet_path, execucao_atual)
                 return status_execucao_pipeline
             else:
                 return "red"
@@ -81,7 +69,7 @@ def inicializa_pipeline(storage: Storage, params: dict) -> str:
             execucao_atual["data_inicio_etapa_execucao_pipeline"] = data_inicio_etapa_execucao_pipeline
             execucao_atual["data_fim_etapa_execucao_pipeline"] = datetime.now(
                 saopaulo_timezone)
-            storage.grava_estado_execucao_atual_pipeline(execucao_atual, tipo_esteira)
+            storage.grava_estado_execucao_atual_pipeline(parquet_path, execucao_atual)
             return "red"
         else:
             execucao_atual["id_execucao_pipeline"] = execucao_atual["id_execucao_pipeline"].iloc[0] + 1
@@ -94,8 +82,8 @@ def inicializa_pipeline(storage: Storage, params: dict) -> str:
             execucao_atual["data_inicio_etapa_execucao_pipeline"] = data_inicio_etapa_execucao_pipeline
             execucao_atual["data_fim_etapa_execucao_pipeline"] = datetime.now(
                 saopaulo_timezone)
-            storage.grava_estado_execucao_atual_pipeline(execucao_atual, tipo_esteira)
-            return "yellow"
+            storage.grava_estado_execucao_atual_pipeline(parquet_path, execucao_atual)
+            return "white"
     else:
         execucao_atual = pd.DataFrame([{
             "id_experimento": 1,
@@ -120,10 +108,10 @@ def inicializa_pipeline(storage: Storage, params: dict) -> str:
             "qtd_linhas_predicao": 0,
             "limiar_minino_acc": limiar_minino_acc,
             "valor_medido_acc": 0,
-            "qtd_dias_treino_inicial": qtd_dias_treino_inicial,
-            "qtd_dias_range_retreino_01": qtd_dias_range_retreino_01,
-            "qtd_dias_range_retreino_02": qtd_dias_range_retreino_02,
-            "qtd_dias_range_retreino_03": qtd_dias_range_retreino_03,
+            "qtd_dias_treino_inicial": 0,
+            "qtd_dias_range_retreino_01": 0,
+            "qtd_dias_range_retreino_02": 0,
+            "qtd_dias_range_retreino_03": 0,
             "etapa_retreino_modelo": 0,
             "qtd_permitida_retreino": qtd_permitida_retreino,
             "qtd_medida_retreino": 0,
@@ -136,5 +124,5 @@ def inicializa_pipeline(storage: Storage, params: dict) -> str:
             "tipo_esteira": tipo_esteira,
             "email_usuario": email_usuario
         }])
-        storage.grava_estado_execucao_atual_pipeline(execucao_atual, tipo_esteira)
+        storage.grava_estado_execucao_atual_pipeline(parquet_path, execucao_atual)
         return "white"

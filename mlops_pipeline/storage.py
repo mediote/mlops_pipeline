@@ -1,25 +1,22 @@
-import os
-
 import pandas as pd
 from pyspark.sql import SparkSession
 
 
 class Storage:
     def __init__(self):
-        self.base_path = '/mnt/gold/MLOPS'
         self.spark = SparkSession.builder \
             .appName("mlopsutils") \
             .getOrCreate()
 
-    def obtem_estado_execucao_atual_pipeline(self, nome_modal: str, nome_projeto: str, nome_modelo: str, tipo_esteira: int) -> pd.DataFrame:
+    def obtem_estado_execucao_atual_pipeline(self, parquet_path: str, nome_modal: str, nome_projeto: str, nome_modelo: str) -> pd.DataFrame:
         """
         Obtém o estado de execução atual do pipeline filtrando um DataFrame Parquet.
 
         Args:
+            parquet_path (str): Caminho completo do arquivo Parquet.
             nome_modal (str): Nome do modal (e.g., rodovias, aeroportos).
             nome_projeto (str): Nome do projeto.
             nome_modelo (str): Nome do modelo.
-            tipo_esteira (int): Tipo da esteira.
 
         Returns:
             pd.DataFrame: DataFrame contendo o registro mais recente do estado de execução atual do pipeline.
@@ -28,12 +25,8 @@ class Storage:
             Exception: Se houver um erro ao acessar ou manipular o DataFrame.
         """
         try:
-            # Define o caminho absoluto para o arquivo Parquet
-            path = os.path.join(
-                self.base_path, f'tray{tipo_esteira}/controle/tbl_controle_esteira_{tipo_esteira}.parquet')
-
             # Carrega o DataFrame Parquet
-            df = self.spark.read.parquet(path)
+            df = self.spark.read.parquet(parquet_path)
 
             # Converte para pandas DataFrame para facilitar a manipulação
             df = df.toPandas()
@@ -52,21 +45,19 @@ class Storage:
         except Exception as e:
             raise Exception(f"Error accessing DataFrame: {e}")
 
-    def grava_estado_execucao_atual_pipeline(self, execucao_atual: pd.DataFrame, tipo_esteira: int):
+    def grava_estado_execucao_atual_pipeline(self, parquet_path: str, execucao_atual: pd.DataFrame):
         """
         Grava o estado de execução atual do pipeline em uma tabela Parquet.
 
         Args:
+            parquet_path (str): Caminho completo do arquivo Parquet.
             execucao_atual (pd.DataFrame): DataFrame contendo o estado de execução atual do pipeline.
-            tipo_esteira (int): Tipo da esteira.
 
         Raises:
             Exception: Se houver um erro ao inserir os dados na tabela.
         """
         try:
-            path = os.path.join(
-                self.base_path, f'tray{tipo_esteira}/controle/tbl_controle_esteira_{tipo_esteira}.parquet')
             sdf = self.spark.createDataFrame(execucao_atual)
-            sdf.write.mode('append').parquet(path)
+            sdf.write.mode('append').parquet(parquet_path)
         except Exception as e:
             raise Exception(f"Error inserting data into table: {e}")
