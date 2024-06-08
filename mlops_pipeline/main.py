@@ -1,4 +1,4 @@
-from mlops_pipeline.steps.inicializa_pipeline import inicializa_pipeline
+from mlops_pipeline.steps.init_pipeline import init_pipeline
 from mlops_pipeline.storage import Storage
 
 
@@ -7,5 +7,5 @@ class Pipeline:
         self.params = params
         self.storage = Storage(delta_path)
 
-    def inicializa_pipeline(self) -> str:
-        return inicializa_pipeline(self.storage, self.params)
+    def init_pipeline(self) -> str:
+        return init_pipeline(self.storage, self.params)

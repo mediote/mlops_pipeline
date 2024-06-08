@@ -26,7 +26,35 @@ class InicializaPipelineParams(BaseModel):
     data_inicio_etapa_execucao_pipeline: datetime
 
 
-def inicializa_pipeline(storage: Storage, params: dict) -> str:
+def init_pipeline(storage: Storage, params: dict) -> str:
+    """
+    Inicializa o pipeline com os parâmetros fornecidos e gerencia o estado da execução do pipeline.
+
+    Args:
+        storage (Storage): Instância da classe Storage para acessar e manipular dados no Delta Lake.
+        params (dict): Dicionário contendo os parâmetros do pipeline.
+            - nome_modal (str): Nome do modal.
+            - nome_projeto (str): Nome do projeto.
+            - nome_modelo (str): Nome do modelo.
+            - tipo_modelo (str): Tipo do modelo.
+            - tipo_esteira (int): Tipo de esteira.
+            - qtd_permitida_retreino (int): Quantidade permitida de retreino.
+            - limiar_maximo_drift (float): Limiar máximo de drift.
+            - limiar_minino_acc (float): Limiar mínimo de acurácia.
+            - dias_validade_modelo (int): Dias de validade do modelo.
+            - qtd_dias_treino_inicial (int): Quantidade de dias de treino inicial.
+            - qtd_dias_range_retreino_01 (int): Quantidade de dias para o primeiro range de retreino.
+            - qtd_dias_range_retreino_02 (int): Quantidade de dias para o segundo range de retreino.
+            - qtd_dias_range_retreino_03 (int): Quantidade de dias para o terceiro range de retreino.
+            - email_usuario (str): Email do usuário.
+            - data_inicio_etapa_execucao_pipeline (datetime): Data de início da etapa de execução do pipeline.
+
+    Returns:
+        str: Status da execução do pipeline, que pode ser "green", "red", "yellow" ou "white".
+
+    Raises:
+        ValueError: Se houver erro na validação dos parâmetros.
+    """
     try:
         validated_params = InicializaPipelineParams(**params)
     except ValidationError as e:
@@ -97,7 +125,7 @@ def inicializa_pipeline(storage: Storage, params: dict) -> str:
             return "white"
     else:
         execucao_atual = pd.DataFrame([{
-            "id_experimento": 1,
+            "id_experimento": 0,
             "nome_modal": nome_modal,
             "nome_projeto": nome_projeto,
             "id_execucao_pipeline": 0,
