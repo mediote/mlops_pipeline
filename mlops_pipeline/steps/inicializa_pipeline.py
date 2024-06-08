@@ -133,7 +133,8 @@ def inicializa_pipeline(storage: Storage, delta_path: str, params: dict) -> str:
             "utilizacao_gpu": 0,
             "utilizacao_memoria": 0,
             "tipo_esteira": tipo_esteira,
-            "email_usuario": email_usuario
+            "email_usuario": email_usuario,
+            "data_criacao": datetime.now(saopaulo_timezone)
         }])
         storage.grava_estado_execucao_atual_pipeline(delta_path, execucao_atual)
         return "white"
