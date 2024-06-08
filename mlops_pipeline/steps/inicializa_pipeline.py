@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 import pandas as pd
+import pytz
 from pydantic import BaseModel, ValidationError
 
 from mlops_pipeline.storage import Storage
@@ -17,6 +18,7 @@ class InicializaPipelineParams(BaseModel):
     limiar_minino_acc: float
     dias_validade_modelo: int
     email_usuario: str
+    data_inicio_etapa_execucao_pipeline: datetime
 
 
 def inicializa_pipeline(storage: Storage, delta_path: str, params: dict) -> str:
@@ -34,11 +36,11 @@ def inicializa_pipeline(storage: Storage, delta_path: str, params: dict) -> str:
     limiar_minino_acc = validated_params.limiar_minino_acc
     dias_validade_modelo = validated_params.dias_validade_modelo
     email_usuario = validated_params.email_usuario
+    data_inicio_etapa_execucao_pipeline = validated_params.data_inicio_etapa_execucao_pipeline
 
     saopaulo_timezone = pytz.timezone("America/Sao_Paulo")
     agora = datetime.now(saopaulo_timezone)
-    data_inicio_etapa_execucao_pipeline = params['data_inicio_etapa_execucao_pipeline']
-
+ 
     execucao_atual = storage.obtem_estado_execucao_atual_pipeline(
         delta_path, nome_modal, nome_projeto, nome_modelo)
 
