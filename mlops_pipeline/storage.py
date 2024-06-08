@@ -1,9 +1,12 @@
+import os
+
 import pandas as pd
 from pyspark.sql import SparkSession
 
 
 class Storage:
-    def __init__(self):
+    def __init__(self, base_path='/mnt/gold/MLOPS'):
+        self.base_path = base_path
         self.spark = SparkSession.builder \
             .appName("mlopsutils") \
             .getOrCreate()
@@ -25,9 +28,12 @@ class Storage:
             Exception: Se houver um erro ao acessar ou manipular o DataFrame.
         """
         try:
+            # Define o caminho absoluto para o arquivo Parquet
+            path = os.path.join(
+                self.base_path, f'tray{tipo_esteira}/controle/tbl_controle_esteira_{tipo_esteira}.parquet')
+
             # Carrega o DataFrame Parquet
-            df = self.spark.read.parquet(
-                f'hive_metastore/controle/tbl_controle_esteira_{tipo_esteira}.parquet')
+            df = self.spark.read.parquet(path)
 
             # Converte para pandas DataFrame para facilitar a manipulação
             df = df.toPandas()
@@ -58,8 +64,9 @@ class Storage:
             Exception: Se houver um erro ao inserir os dados na tabela.
         """
         try:
+            path = os.path.join(
+                self.base_path, f'tray{tipo_esteira}/controle/tbl_controle_esteira_{tipo_esteira}.parquet')
             sdf = self.spark.createDataFrame(execucao_atual)
-            sdf.write.mode('append').insertInto(
-                f"hive_metastore.controle.tbl_controle_esteira_{tipo_esteira}")
+            sdf.write.mode('append').parquet(path)
         except Exception as e:
             raise Exception(f"Error inserting data into table: {e}")
