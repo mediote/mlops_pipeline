@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 from pyspark.sql import SparkSession
 
@@ -8,25 +10,26 @@ class Storage:
             .appName("mlopsutils") \
             .getOrCreate()
 
-    def obtem_estado_execucao_atual_pipeline(self, parquet_path: str, nome_modal: str, nome_projeto: str, nome_modelo: str) -> pd.DataFrame:
+    def obtem_estado_execucao_atual_pipeline(self, delta_path: str, nome_modal: str, nome_projeto: str, nome_modelo: str) -> pd.DataFrame:
         """
-        Obtém o estado de execução atual do pipeline filtrando um DataFrame Parquet.
+        Obtém o estado de execução atual do pipeline filtrando um DataFrame Delta.
 
         Args:
-            parquet_path (str): Caminho completo do arquivo Parquet.
+            delta_path (str): Caminho completo do arquivo Delta.
             nome_modal (str): Nome do modal (e.g., rodovias, aeroportos).
             nome_projeto (str): Nome do projeto.
             nome_modelo (str): Nome do modelo.
 
         Returns:
             pd.DataFrame: DataFrame contendo o registro mais recente do estado de execução atual do pipeline.
+            None: Se nenhum registro correspondente for encontrado.
 
         Raises:
             Exception: Se houver um erro ao acessar ou manipular o DataFrame.
         """
         try:
-            # Carrega o DataFrame Parquet
-            df = self.spark.read.parquet(parquet_path)
+            # Carrega o DataFrame Delta
+            df = self.spark.read.format("delta").load(delta_path)
 
             # Converte para pandas DataFrame para facilitar a manipulação
             df = df.toPandas()
@@ -38,6 +41,9 @@ class Storage:
                 (df['nome_modelo'] == nome_modelo)
             ]
 
+            if filtered_df.empty:
+                return None
+
             # Obtém a linha com a data_criacao mais recente
             latest_record = filtered_df.loc[filtered_df['data_criacao'].idxmax()]
 
@@ -45,12 +51,12 @@ class Storage:
         except Exception as e:
             raise Exception(f"Error accessing DataFrame: {e}")
 
-    def grava_estado_execucao_atual_pipeline(self, parquet_path: str, execucao_atual: pd.DataFrame):
+    def grava_estado_execucao_atual_pipeline(self, delta_path: str, execucao_atual: pd.DataFrame):
         """
-        Grava o estado de execução atual do pipeline em uma tabela Parquet.
+        Grava o estado de execução atual do pipeline em uma tabela Delta.
 
         Args:
-            parquet_path (str): Caminho completo do arquivo Parquet.
+            delta_path (str): Caminho completo do arquivo Delta.
             execucao_atual (pd.DataFrame): DataFrame contendo o estado de execução atual do pipeline.
 
         Raises:
@@ -58,6 +64,6 @@ class Storage:
         """
         try:
             sdf = self.spark.createDataFrame(execucao_atual)
-            sdf.write.mode('append').parquet(parquet_path)
+            sdf.write.format("delta").mode('append').save(delta_path)
         except Exception as e:
             raise Exception(f"Error inserting data into table: {e}")

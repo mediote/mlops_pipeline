@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 
 import pandas as pd
-import pytz
 from pydantic import BaseModel, ValidationError
 
 from mlops_pipeline.storage import Storage
@@ -20,7 +19,7 @@ class InicializaPipelineParams(BaseModel):
     email_usuario: str
 
 
-def inicializa_pipeline(storage: Storage, parquet_path: str, params: dict) -> str:
+def inicializa_pipeline(storage: Storage, delta_path: str, params: dict) -> str:
     try:
         validated_params = InicializaPipelineParams(**params)
     except ValidationError as e:
@@ -41,9 +40,9 @@ def inicializa_pipeline(storage: Storage, parquet_path: str, params: dict) -> st
     data_inicio_etapa_execucao_pipeline = params['data_inicio_etapa_execucao_pipeline']
 
     execucao_atual = storage.obtem_estado_execucao_atual_pipeline(
-        parquet_path, nome_modal, nome_projeto, nome_modelo)
+        delta_path, nome_modal, nome_projeto, nome_modelo)
 
-    if not execucao_atual.empty:
+    if execucao_atual is not None:
         execucao_atual["percentual_restante_validade_modelo"] = obtem_percentual_restante_validade_modelo(
             execucao_atual)
         data_validade_modelo = execucao_atual["data_validade_modelo"].iloc[0]
@@ -57,8 +56,7 @@ def inicializa_pipeline(storage: Storage, parquet_path: str, params: dict) -> st
                 execucao_atual["data_inicio_etapa_execucao_pipeline"] = data_inicio_etapa_execucao_pipeline
                 execucao_atual["data_fim_etapa_execucao_pipeline"] = datetime.now(
                     saopaulo_timezone)
-                storage.grava_estado_execucao_atual_pipeline(
-                    parquet_path, execucao_atual)
+                storage.grava_estado_execucao_atual_pipeline(delta_path, execucao_atual)
                 return status_execucao_pipeline
             else:
                 return "red"
@@ -70,7 +68,7 @@ def inicializa_pipeline(storage: Storage, parquet_path: str, params: dict) -> st
             execucao_atual["data_inicio_etapa_execucao_pipeline"] = data_inicio_etapa_execucao_pipeline
             execucao_atual["data_fim_etapa_execucao_pipeline"] = datetime.now(
                 saopaulo_timezone)
-            storage.grava_estado_execucao_atual_pipeline(parquet_path, execucao_atual)
+            storage.grava_estado_execucao_atual_pipeline(delta_path, execucao_atual)
             return "red"
         else:
             execucao_atual["id_execucao_pipeline"] = execucao_atual["id_execucao_pipeline"].iloc[0] + 1
@@ -83,7 +81,7 @@ def inicializa_pipeline(storage: Storage, parquet_path: str, params: dict) -> st
             execucao_atual["data_inicio_etapa_execucao_pipeline"] = data_inicio_etapa_execucao_pipeline
             execucao_atual["data_fim_etapa_execucao_pipeline"] = datetime.now(
                 saopaulo_timezone)
-            storage.grava_estado_execucao_atual_pipeline(parquet_path, execucao_atual)
+            storage.grava_estado_execucao_atual_pipeline(delta_path, execucao_atual)
             return "white"
     else:
         execucao_atual = pd.DataFrame([{
@@ -125,5 +123,5 @@ def inicializa_pipeline(storage: Storage, parquet_path: str, params: dict) -> st
             "tipo_esteira": tipo_esteira,
             "email_usuario": email_usuario
         }])
-        storage.grava_estado_execucao_atual_pipeline(parquet_path, execucao_atual)
+        storage.grava_estado_execucao_atual_pipeline(delta_path, execucao_atual)
         return "white"
