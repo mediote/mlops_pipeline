@@ -211,8 +211,4 @@ def update_pipeline_execution_step(params: dict, delta_path: str) -> str:
     run_state["nome_etapa_pipeline"] = nome_etapa_pipeline
     run_state["data_inicio_etapa_pipeline"] = data_inicio_etapa_pipeline
     run_state["data_fim_etapa_pipeline"] = datetime.now(saopaulo_timezone)
-
-    try:
-        set_pipeline_run_state(params={run_state, delta_path})
-    except Exception as e:
-        raise Exception(f"Erro ao atualizar a execução da etapa: {e}")
+    set_pipeline_run_state(params={run_state, delta_path})

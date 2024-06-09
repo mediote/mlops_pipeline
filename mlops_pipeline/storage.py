@@ -62,6 +62,9 @@ class SetPipelineRunStateParams(BaseModel):
     run_state: pd.DataFrame
     delta_path: str
 
+    class Config:
+        arbitrary_types_allowed = True
+
 
 def set_pipeline_run_state(params: dict):
     """
