@@ -24,7 +24,7 @@ class InitPipelineParams(BaseModel):
     qtd_dados_retreino_02: int
     qtd_dados_retreino_03: int
     email_usuario: str
-    data_inicio_etapa_execucao_pipeline: datetime
+    data_inicio_etapa_pipeline: datetime
 
 
 def init_pipeline(params: dict, delta_path: str) -> str:
@@ -48,7 +48,7 @@ def init_pipeline(params: dict, delta_path: str) -> str:
             - qtd_dados_retreino_02 (int): Quantidade de dias para o segundo range de retreino.
             - qtd_dados_retreino_03 (int): Quantidade de dias para o terceiro range de retreino.
             - email_usuario (str): Email do usuário.
-            - data_inicio_etapa_execucao_pipeline (datetime): Data de início da etapa de execução do pipeline.
+            - data_inicio_etapa_pipeline (datetime): Data de início da etapa de execução do pipeline.
 
     Returns:
         str: Status da execução do pipeline, que pode ser "green", "red", "yellow" ou "white".
@@ -75,7 +75,7 @@ def init_pipeline(params: dict, delta_path: str) -> str:
     qtd_dados_retreino_02 = validated_params.qtd_dados_retreino_02
     qtd_dados_retreino_03 = validated_params.qtd_dados_retreino_03
     email_usuario = validated_params.email_usuario
-    data_inicio_etapa_execucao_pipeline = validated_params.data_inicio_etapa_execucao_pipeline
+    data_inicio_etapa_pipeline = validated_params.data_inicio_etapa_pipeline
 
     saopaulo_timezone = pytz.timezone("America/Sao_Paulo")
     now = datetime.now(saopaulo_timezone)
@@ -94,8 +94,8 @@ def init_pipeline(params: dict, delta_path: str) -> str:
                 run_state["resumo_execucao_etapa"] = "Preparando para drift/predicao"
                 run_state["id_pipeline"] = run_state["id_pipeline"].iloc[0] + 1
                 run_state["id_etapa_pipeline"] = 0
-                run_state["data_inicio_etapa_execucao_pipeline"] = data_inicio_etapa_execucao_pipeline
-                run_state["data_fim_etapa_execucao_pipeline"] = datetime.now(
+                run_state["data_inicio_etapa_pipeline"] = data_inicio_etapa_pipeline
+                run_state["data_fim_etapa_pipeline"] = datetime.now(
                     saopaulo_timezone)
                 set_pipeline_run_state(run_state, delta_path)
                 return status_execucao_pipeline
@@ -106,8 +106,8 @@ def init_pipeline(params: dict, delta_path: str) -> str:
             run_state["id_etapa_pipeline"] = 0
             run_state["resumo_execucao_etapa"] = "Limite de Retreino Por Drift Excedido"
             run_state["status_execucao_pipeline"] = "red"
-            run_state["data_inicio_etapa_execucao_pipeline"] = data_inicio_etapa_execucao_pipeline
-            run_state["data_fim_etapa_execucao_pipeline"] = datetime.now(
+            run_state["data_inicio_etapa_pipeline"] = data_inicio_etapa_pipeline
+            run_state["data_fim_etapa_pipeline"] = datetime.now(
                 saopaulo_timezone)
             set_pipeline_run_state(run_state, delta_path)
             return "red"
@@ -119,8 +119,8 @@ def init_pipeline(params: dict, delta_path: str) -> str:
             run_state["id_etapa_pipeline"] = 0
             run_state["valor_medido_metrica_modelo"] = 0
             run_state["valor_medido_drift"] = 0
-            run_state["data_inicio_etapa_execucao_pipeline"] = data_inicio_etapa_execucao_pipeline
-            run_state["data_fim_etapa_execucao_pipeline"] = datetime.now(
+            run_state["data_inicio_etapa_pipeline"] = data_inicio_etapa_pipeline
+            run_state["data_fim_etapa_pipeline"] = datetime.now(
                 saopaulo_timezone)
             set_pipeline_run_state(run_state, delta_path)
             return "white"
@@ -130,10 +130,10 @@ def init_pipeline(params: dict, delta_path: str) -> str:
             "nome_projeto": nome_projeto,
             "id_pipeline": 0,
             "id_etapa_pipeline": 0,
-            "status_execucao_pipeline": "white",
             "nome_etapa_pipeline": "Inicializa Pipeline",
-            "data_inicio_etapa_execucao_pipeline": data_inicio_etapa_execucao_pipeline,
-            "data_fim_etapa_execucao_pipeline": datetime.now(saopaulo_timezone),
+            "status_execucao_pipeline": "white",
+            "data_inicio_etapa_pipeline": data_inicio_etapa_pipeline,
+            "data_fim_etapa_pipeline": datetime.now(saopaulo_timezone),
             "resumo_execucao_etapa": "Preparacao para Treinamento Inicial",
             "nome_modelo": nome_modelo,
             "versao_modelo": "0.0",
@@ -172,7 +172,7 @@ class ExecutionStepParams(BaseModel):
     nome_projeto: str
     nome_modelo: str
     nome_etapa_pipeline: str
-    data_inicio_etapa_execucao_pipeline: datetime
+    data_inicio_etapa_pipeline: datetime
 
 
 def update_pipeline_execution_step(params: dict, delta_path: str) -> str:
@@ -183,7 +183,7 @@ def update_pipeline_execution_step(params: dict, delta_path: str) -> str:
         storage (Storage): Instância do Storage para gravar o estado.
         execucao_atual (pd.DataFrame): DataFrame com o estado atual da execução.
         etapa (str): Nome da etapa atual da execução.
-        data_inicio_etapa_execucao_pipeline (datetime): Data e hora de início da etapa do pipeline.
+        data_inicio_etapa_pipeline (datetime): Data e hora de início da etapa do pipeline.
 
     Raises:
         Exception: Se ocorrer um erro ao atualizar o estado da execução.
@@ -196,7 +196,7 @@ def update_pipeline_execution_step(params: dict, delta_path: str) -> str:
     nome_modal = validated_params.nome_modal
     nome_projeto = validated_params.nome_projeto
     nome_modelo = validated_params.nome_modelo
-    data_inicio_etapa_execucao_pipeline = validated_params.data_inicio_etapa_execucao_pipeline
+    data_inicio_etapa_pipeline = validated_params.data_inicio_etapa_pipeline
     nome_etapa_pipeline = validated_params.nome_etapa_pipeline
 
     saopaulo_timezone = pytz.timezone("America/Sao_Paulo")
@@ -206,8 +206,8 @@ def update_pipeline_execution_step(params: dict, delta_path: str) -> str:
 
     run_state["id_etapa_pipeline"] = run_state["id_etapa_pipeline"].iloc[0] + 1
     run_state["nome_etapa_pipeline"] = nome_etapa_pipeline
-    run_state["data_inicio_etapa_execucao_pipeline"] = data_inicio_etapa_execucao_pipeline
-    run_state["data_fim_etapa_execucao_pipeline"] = datetime.now(saopaulo_timezone)
+    run_state["data_inicio_etapa_pipeline"] = data_inicio_etapa_pipeline
+    run_state["data_fim_etapa_pipeline"] = datetime.now(saopaulo_timezone)
 
     try:
         set_pipeline_run_state(run_state, delta_path)
