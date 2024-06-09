@@ -176,9 +176,6 @@ def init_pipeline(params: Dict) -> str:
 
 
 class ExecutionStepParams(BaseModel):
-    nome_modal: str
-    nome_projeto: str
-    nome_modelo: str
     data_inicio_etapa_pipeline: datetime
     nome_etapa_pipeline: str
     utilizacao_cpu: Optional[float] = None
