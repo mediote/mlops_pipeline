@@ -1,18 +1,10 @@
 import pandas as pd
-from pydantic import BaseModel, ValidationError
 from pyspark.sql import SparkSession
 
 spark = SparkSession.builder.appName("mlops_pipeline").getOrCreate()
 
 
-class GetPipelineRunStateParams(BaseModel):
-    nome_modal: str
-    nome_projeto: str
-    nome_modelo: str
-    delta_path: str
-
-
-def get_pipeline_run_state(params: dict) -> pd.DataFrame:
+def get_pipeline_run_state(nome_modal: str, nome_projeto: str, nome_modelo: str, delta_path: str) -> pd.DataFrame:
     """
     Obtém o estado atual da execução do pipeline com base no modal, projeto e modelo fornecidos.
 
@@ -28,16 +20,6 @@ def get_pipeline_run_state(params: dict) -> pd.DataFrame:
     Raises:
         Exception: Se ocorrer um erro ao acessar o DataFrame.
     """
-    try:
-        validated_params = GetPipelineRunStateParams(**params)
-    except ValidationError as e:
-        raise ValueError(f"Erro na validação dos parâmetros: {e}")
-
-    nome_modal = validated_params.nome_modal
-    nome_projeto = validated_params.nome_projeto
-    nome_modelo = validated_params.nome_modelo
-    delta_path = validated_params.delta_path
-
     try:
         # Carrega o DataFrame Delta
         df = spark.read.format("delta").load(delta_path)
@@ -58,15 +40,7 @@ def get_pipeline_run_state(params: dict) -> pd.DataFrame:
         raise Exception(f"Error accessing DataFrame: {e}")
 
 
-class SetPipelineRunStateParams(BaseModel):
-    run_state: pd.DataFrame
-    delta_path: str
-
-    class Config:
-        arbitrary_types_allowed = True
-
-
-def set_pipeline_run_state(params: dict):
+def set_pipeline_run_state(run_state: pd.DataFrame,  delta_path: str):
     """
     Grava o estado atual da execução do pipeline na tabela Delta Lake.
     Args:
@@ -74,14 +48,6 @@ def set_pipeline_run_state(params: dict):
     Raises:
         Exception: Se ocorrer um erro ao inserir dados na tabela.
     """
-    try:
-        validated_params = SetPipelineRunStateParams(**params)
-    except ValidationError as e:
-        raise ValueError(f"Erro na validação dos parâmetros: {e}")
-
-    run_state = validated_params.run_state
-    delta_path = validated_params.delta_path
-
     try:
         # Cria um Spark DataFrame a partir do pandas DataFrame
         sdf = spark.createDataFrame(run_state)
@@ -91,12 +57,7 @@ def set_pipeline_run_state(params: dict):
         raise Exception(f"Error inserting data into table: {e}")
 
 
-class LoadFeaturesParams(BaseModel):
-    training_window: int
-    origin_table: str
-
-
-def load_features(params: dict):
+def load_features(training_window: int, origin_table: str):
     """
     Carrega os dados de uma tabela de origem com base em uma janela de treinamento especificada.
     Args:
@@ -107,13 +68,7 @@ def load_features(params: dict):
     Raises:
         Exception: Se ocorrer um erro ao executar a consulta SQL.
     """
-    try:
-        validated_params = LoadFeaturesParams(**params)
-    except ValidationError as e:
-        raise ValueError(f"Erro na validação dos parâmetros: {e}")
 
-    training_window = validated_params.training_window
-    origin_table = validated_params.origin_table
     query = f"""
                     SELECT
                         *

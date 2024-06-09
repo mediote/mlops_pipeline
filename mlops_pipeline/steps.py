@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import Dict, Optional
 
 import pandas as pd
 import pytz
@@ -28,7 +29,7 @@ class InitPipelineParams(BaseModel):
     delta_path: str
 
 
-def init_pipeline(params: dict) -> str:
+def init_pipeline(params: Dict) -> str:
     """
     Inicializa o pipeline com os parâmetros fornecidos e gerencia o estado da execução do pipeline.
 
@@ -83,10 +84,10 @@ def init_pipeline(params: dict) -> str:
     now = datetime.now(saopaulo_timezone)
 
     run_state = get_pipeline_run_state(
-        params={"nome_modal": nome_modal,
-                "nome_projeto": nome_projeto,
-                "nome_modelo": nome_modelo,
-                "delta_path": delta_path}
+        nome_modal,
+        nome_projeto,
+        nome_modelo,
+        delta_path
     )
 
     if run_state is not None:
@@ -103,9 +104,7 @@ def init_pipeline(params: dict) -> str:
                 run_state["data_inicio_etapa_pipeline"] = data_inicio_etapa_pipeline
                 run_state["data_fim_etapa_pipeline"] = datetime.now(
                     saopaulo_timezone)
-                set_pipeline_run_state(
-                    params={"run_state": run_state,
-                            "delta_path": delta_path})
+                set_pipeline_run_state(run_state, delta_path)
                 return status_execucao_pipeline
             else:
                 return "red"
@@ -118,9 +117,7 @@ def init_pipeline(params: dict) -> str:
             run_state["data_inicio_etapa_pipeline"] = data_inicio_etapa_pipeline
             run_state["data_fim_etapa_pipeline"] = datetime.now(
                 saopaulo_timezone)
-            set_pipeline_run_state(
-                params={"run_state": run_state,
-                        "delta_path": delta_path})
+            set_pipeline_run_state(run_state, delta_path)
             return "red"
         else:
             run_state["id_pipeline"] = run_state["id_pipeline"].iloc[0] + 1
@@ -133,9 +130,7 @@ def init_pipeline(params: dict) -> str:
             run_state["data_inicio_etapa_pipeline"] = data_inicio_etapa_pipeline
             run_state["data_fim_etapa_pipeline"] = datetime.now(
                 saopaulo_timezone)
-            set_pipeline_run_state(
-                params={"run_state": run_state,
-                        "delta_path": delta_path})
+            set_pipeline_run_state(run_state, delta_path)
             return "white"
     else:
         run_state = pd.DataFrame([{
@@ -176,9 +171,7 @@ def init_pipeline(params: dict) -> str:
             "email_usuario": email_usuario,
             "data_criacao": datetime.now(saopaulo_timezone)
         }])
-        set_pipeline_run_state(
-            params={"run_state": run_state,
-                    "delta_path": delta_path})
+        set_pipeline_run_state(run_state, delta_path)
         return "white"
 
 
@@ -186,43 +179,38 @@ class ExecutionStepParams(BaseModel):
     nome_modal: str
     nome_projeto: str
     nome_modelo: str
-    nome_etapa_pipeline: str
     data_inicio_etapa_pipeline: datetime
+    nome_etapa_pipeline: str
+    utilizacao_cpu: Optional[float] = None
+    utilizacao_memoria: Optional[float] = None
+    resumo_execucao_etapa: Optional[str] = None
 
 
-def update_pipeline_execution_step(params: dict, delta_path: str) -> str:
+def update_pipeline_execution_step(params: Dict, run_state: pd.DataFrame, delta_path: str):
     """
     Atualiza a execução de uma etapa no pipeline.
 
     Args:
-        storage (Storage): Instância do Storage para gravar o estado.
-        execucao_atual (pd.DataFrame): DataFrame com o estado atual da execução.
-        etapa (str): Nome da etapa atual da execução.
-        data_inicio_etapa_pipeline (datetime): Data e hora de início da etapa do pipeline.
+        params (dict): Dicionário com os parâmetros de execução da etapa.
+        run_state (pd.DataFrame): DataFrame com o estado atual da execução.
+        delta_path (str): Caminho para salvar o estado atualizado.
 
     Raises:
-        Exception: Se ocorrer um erro ao atualizar o estado da execução.
+        ValueError: Se ocorrer um erro na validação dos parâmetros.
     """
     try:
         validated_params = ExecutionStepParams(**params)
     except ValidationError as e:
         raise ValueError(f"Erro na validação dos parâmetros: {e}")
 
-    nome_modal = validated_params.nome_modal
-    nome_projeto = validated_params.nome_projeto
-    nome_modelo = validated_params.nome_modelo
-    data_inicio_etapa_pipeline = validated_params.data_inicio_etapa_pipeline
-    nome_etapa_pipeline = validated_params.nome_etapa_pipeline
-
     saopaulo_timezone = pytz.timezone("America/Sao_Paulo")
 
-    run_state = get_pipeline_run_state(
-        nome_modal, nome_projeto, nome_modelo, delta_path)
-
     run_state["id_etapa_pipeline"] = run_state["id_etapa_pipeline"].iloc[0] + 1
-    run_state["nome_etapa_pipeline"] = nome_etapa_pipeline
-    run_state["data_inicio_etapa_pipeline"] = data_inicio_etapa_pipeline
+    run_state["data_inicio_etapa_pipeline"] = validated_params.data_inicio_etapa_pipeline
     run_state["data_fim_etapa_pipeline"] = datetime.now(saopaulo_timezone)
-    set_pipeline_run_state(
-        params={"run_state": run_state,
-                "delta_path": delta_path})
+    run_state["nome_etapa_pipeline"] = validated_params.nome_etapa_pipeline
+    run_state["utilizacao_cpu"] = validated_params.utilizacao_cpu
+    run_state["utilizacao_memoria"] = validated_params.utilizacao_memoria
+    run_state["resumo_execucao_etapa"] = validated_params.resumo_execucao_etapa
+
+    set_pipeline_run_state(run_state, delta_path)
