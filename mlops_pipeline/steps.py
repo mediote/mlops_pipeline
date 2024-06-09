@@ -4,11 +4,12 @@ import pandas as pd
 import pytz
 from pydantic import BaseModel, ValidationError
 
-from mlops_pipeline.storage import Storage
-from mlops_pipeline.utils import obtem_percentual_restante_validade_modelo
+from mlops_pipeline.storage import (get_pipeline_run_state,
+                                    set_pipeline_run_state)
+from mlops_pipeline.utils import get_model_remaining_validity_percentage
 
 
-class InicializaPipelineParams(BaseModel):
+class InitPipelineParams(BaseModel):
     nome_modal: str
     nome_projeto: str
     nome_modelo: str
@@ -26,7 +27,7 @@ class InicializaPipelineParams(BaseModel):
     data_inicio_etapa_execucao_pipeline: datetime
 
 
-def init_pipeline(storage: Storage, params: dict) -> str:
+def init_pipeline(params: dict, delta_path: str) -> str:
     """
     Inicializa o pipeline com os parâmetros fornecidos e gerencia o estado da execução do pipeline.
 
@@ -56,7 +57,7 @@ def init_pipeline(storage: Storage, params: dict) -> str:
         ValueError: Se houver erro na validação dos parâmetros.
     """
     try:
-        validated_params = InicializaPipelineParams(**params)
+        validated_params = InitPipelineParams(**params)
     except ValidationError as e:
         raise ValueError(f"Erro na validação dos parâmetros: {e}")
 
@@ -77,54 +78,54 @@ def init_pipeline(storage: Storage, params: dict) -> str:
     data_inicio_etapa_execucao_pipeline = validated_params.data_inicio_etapa_execucao_pipeline
 
     saopaulo_timezone = pytz.timezone("America/Sao_Paulo")
-    agora = datetime.now(saopaulo_timezone)
+    now = datetime.now(saopaulo_timezone)
 
-    execucao_atual = storage.obtem_estado_execucao_atual_pipeline(
-        nome_modal, nome_projeto, nome_modelo)
+    run_state = get_pipeline_run_state(
+        nome_modal, nome_projeto, nome_modelo, delta_path)
 
-    if execucao_atual is not None:
-        execucao_atual["percentual_restante_validade_modelo"] = obtem_percentual_restante_validade_modelo(
-            execucao_atual)
-        data_validade_modelo = execucao_atual["data_validade_modelo"].iloc[0]
+    if run_state is not None:
+        run_state["percentual_restante_validade_modelo"] = get_model_remaining_validity_percentage(
+            run_state)
+        data_validade_modelo = run_state["data_validade_modelo"].iloc[0]
 
-        if datetime.strptime(data_validade_modelo, "%Y-%m-%d").date() > agora.date() and execucao_atual["qtd_medida_retreino"].iloc[0] <= qtd_permitida_retreino:
-            if execucao_atual["status_execucao_pipeline"].iloc[0] == "green":
-                status_execucao_pipeline = execucao_atual["status_execucao_pipeline"].iloc[0]
-                execucao_atual["resumo_execucao"] = "Preparando para drift/predicao"
-                execucao_atual["id_execucao_pipeline"] = execucao_atual["id_execucao_pipeline"].iloc[0] + 1
-                execucao_atual["id_etapa_execucao_pipeline"] = 0
-                execucao_atual["data_inicio_etapa_execucao_pipeline"] = data_inicio_etapa_execucao_pipeline
-                execucao_atual["data_fim_etapa_execucao_pipeline"] = datetime.now(
+        if datetime.strptime(data_validade_modelo, "%Y-%m-%d").date() > now.date() and run_state["qtd_medida_retreino"].iloc[0] <= qtd_permitida_retreino:
+            if run_state["status_execucao_pipeline"].iloc[0] == "green":
+                status_execucao_pipeline = run_state["status_execucao_pipeline"].iloc[0]
+                run_state["resumo_execucao"] = "Preparando para drift/predicao"
+                run_state["id_execucao_pipeline"] = run_state["id_execucao_pipeline"].iloc[0] + 1
+                run_state["id_etapa_execucao_pipeline"] = 0
+                run_state["data_inicio_etapa_execucao_pipeline"] = data_inicio_etapa_execucao_pipeline
+                run_state["data_fim_etapa_execucao_pipeline"] = datetime.now(
                     saopaulo_timezone)
-                storage.grava_estado_execucao_atual_pipeline(execucao_atual)
+                set_pipeline_run_state(run_state, delta_path)
                 return status_execucao_pipeline
             else:
                 return "red"
-        elif execucao_atual["qtd_medida_retreino"].iloc[0] >= qtd_permitida_retreino:
-            execucao_atual["id_execucao_pipeline"] = execucao_atual["id_execucao_pipeline"].iloc[0] + 1
-            execucao_atual["id_etapa_execucao_pipeline"] = 0
-            execucao_atual["resumo_execucao"] = "Limite de Retreino Por Drift Excedido"
-            execucao_atual["status_execucao_pipeline"] = "red"
-            execucao_atual["data_inicio_etapa_execucao_pipeline"] = data_inicio_etapa_execucao_pipeline
-            execucao_atual["data_fim_etapa_execucao_pipeline"] = datetime.now(
+        elif run_state["qtd_medida_retreino"].iloc[0] >= qtd_permitida_retreino:
+            run_state["id_execucao_pipeline"] = run_state["id_execucao_pipeline"].iloc[0] + 1
+            run_state["id_etapa_execucao_pipeline"] = 0
+            run_state["resumo_execucao"] = "Limite de Retreino Por Drift Excedido"
+            run_state["status_execucao_pipeline"] = "red"
+            run_state["data_inicio_etapa_execucao_pipeline"] = data_inicio_etapa_execucao_pipeline
+            run_state["data_fim_etapa_execucao_pipeline"] = datetime.now(
                 saopaulo_timezone)
-            storage.grava_estado_execucao_atual_pipeline(execucao_atual)
+            set_pipeline_run_state(run_state, delta_path)
             return "red"
         else:
-            execucao_atual["id_execucao_pipeline"] = execucao_atual["id_execucao_pipeline"].iloc[0] + 1
-            execucao_atual["resumo_execucao"] = "Retreino por Validade"
-            execucao_atual["status_execucao_pipeline"] = "yellow"
-            execucao_atual["etapa_retreino_modelo"] = execucao_atual["etapa_retreino_modelo"].iloc[0] + 1
-            execucao_atual["id_etapa_execucao_pipeline"] = 0
-            execucao_atual["valor_medido_metrica_modelo"] = 0
-            execucao_atual["valor_medido_drift"] = 0
-            execucao_atual["data_inicio_etapa_execucao_pipeline"] = data_inicio_etapa_execucao_pipeline
-            execucao_atual["data_fim_etapa_execucao_pipeline"] = datetime.now(
+            run_state["id_execucao_pipeline"] = run_state["id_execucao_pipeline"].iloc[0] + 1
+            run_state["resumo_execucao"] = "Retreino por Validade"
+            run_state["status_execucao_pipeline"] = "yellow"
+            run_state["etapa_retreino_modelo"] = run_state["etapa_retreino_modelo"].iloc[0] + 1
+            run_state["id_etapa_execucao_pipeline"] = 0
+            run_state["valor_medido_metrica_modelo"] = 0
+            run_state["valor_medido_drift"] = 0
+            run_state["data_inicio_etapa_execucao_pipeline"] = data_inicio_etapa_execucao_pipeline
+            run_state["data_fim_etapa_execucao_pipeline"] = datetime.now(
                 saopaulo_timezone)
-            storage.grava_estado_execucao_atual_pipeline(execucao_atual)
+            set_pipeline_run_state(run_state, delta_path)
             return "white"
     else:
-        execucao_atual = pd.DataFrame([{
+        run_state = pd.DataFrame([{
             "id_experimento": 0,
             "nome_modal": nome_modal,
             "nome_projeto": nome_projeto,
@@ -139,7 +140,7 @@ def init_pipeline(storage: Storage, params: dict) -> str:
             "versao_modelo": "0.0",
             "tipo_modelo": tipo_modelo,
             "status_modelo": "white",
-            "data_validade_modelo": (agora + timedelta(days=dias_validade_modelo)).strftime("%Y-%m-%d"),
+            "data_validade_modelo": (now + timedelta(days=dias_validade_modelo)).strftime("%Y-%m-%d"),
             "dias_validade_modelo": dias_validade_modelo,
             "percentual_restante_validade_modelo": 1.0,
             "duracao_treinamento_modelo": 0,
@@ -164,5 +165,53 @@ def init_pipeline(storage: Storage, params: dict) -> str:
             "email_usuario": email_usuario,
             "data_criacao": datetime.now(saopaulo_timezone)
         }])
-        storage.grava_estado_execucao_atual_pipeline(execucao_atual)
+        set_pipeline_run_state(run_state, delta_path)
         return "white"
+
+
+class ExecutionStepParams(BaseModel):
+    nome_modal: str
+    nome_projeto: str
+    nome_modelo: str
+    etapa_execucao_pipeline: str
+    data_inicio_etapa_execucao_pipeline: datetime
+
+
+def update_pipeline_execution_step(params: dict, delta_path: str) -> str:
+    """
+    Atualiza a execução de uma etapa no pipeline.
+
+    Args:
+        storage (Storage): Instância do Storage para gravar o estado.
+        execucao_atual (pd.DataFrame): DataFrame com o estado atual da execução.
+        etapa (str): Nome da etapa atual da execução.
+        data_inicio_etapa_execucao_pipeline (datetime): Data e hora de início da etapa do pipeline.
+
+    Raises:
+        Exception: Se ocorrer um erro ao atualizar o estado da execução.
+    """
+    try:
+        validated_params = ExecutionStepParams(**params)
+    except ValidationError as e:
+        raise ValueError(f"Erro na validação dos parâmetros: {e}")
+
+    nome_modal = validated_params.nome_modal
+    nome_projeto = validated_params.nome_projeto
+    nome_modelo = validated_params.nome_modelo
+    data_inicio_etapa_execucao_pipeline = validated_params.data_inicio_etapa_execucao_pipeline
+    etapa_execucao_pipeline = validated_params.etapa_execucao_pipeline
+
+    saopaulo_timezone = pytz.timezone("America/Sao_Paulo")
+
+    run_state = get_pipeline_run_state(
+        nome_modal, nome_projeto, nome_modelo, delta_path)
+
+    run_state["id_etapa_execucao_pipeline"] = run_state["id_etapa_execucao_pipeline"].iloc[0] + 1
+    run_state["etapa_execucao_pipeline"] = etapa_execucao_pipeline
+    run_state["data_inicio_etapa_execucao_pipeline"] = data_inicio_etapa_execucao_pipeline
+    run_state["data_fim_etapa_execucao_pipeline"] = datetime.now(saopaulo_timezone)
+
+    try:
+        set_pipeline_run_state(run_state, delta_path)
+    except Exception as e:
+        raise Exception(f"Erro ao atualizar a execução da etapa: {e}")
