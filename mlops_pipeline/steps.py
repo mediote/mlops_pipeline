@@ -19,7 +19,7 @@ class InitPipelineParams(BaseModel):
     limiar_maximo_drift: float
     limiar_minino_acc: float
     dias_validade_modelo: int
-    qtd_dados_treinamento: int
+    qtd_dados_treino: int
     qtd_dados_retreino_01: int
     qtd_dados_retreino_02: int
     qtd_dados_retreino_03: int
@@ -43,7 +43,7 @@ def init_pipeline(params: dict, delta_path: str) -> str:
             - limiar_maximo_drift (float): Limiar máximo de drift.
             - limiar_minino_acc (float): Limiar mínimo de acurácia.
             - dias_validade_modelo (int): Dias de validade do modelo.
-            - qtd_dados_treinamento (int): Quantidade de dias de treino inicial.
+            - qtd_dados_treino (int): Quantidade de dias de treino inicial.
             - qtd_dados_retreino_01 (int): Quantidade de dias para o primeiro range de retreino.
             - qtd_dados_retreino_02 (int): Quantidade de dias para o segundo range de retreino.
             - qtd_dados_retreino_03 (int): Quantidade de dias para o terceiro range de retreino.
@@ -70,7 +70,7 @@ def init_pipeline(params: dict, delta_path: str) -> str:
     limiar_minino_acc = validated_params.limiar_minino_acc
     limiar_maximo_drift = validated_params.limiar_maximo_drift
     dias_validade_modelo = validated_params.dias_validade_modelo
-    qtd_dados_treinamento = validated_params.qtd_dados_treinamento
+    qtd_dados_treino = validated_params.qtd_dados_treino
     qtd_dados_retreino_01 = validated_params.qtd_dados_retreino_01
     qtd_dados_retreino_02 = validated_params.qtd_dados_retreino_02
     qtd_dados_retreino_03 = validated_params.qtd_dados_retreino_03
@@ -147,7 +147,7 @@ def init_pipeline(params: dict, delta_path: str) -> str:
             "qtd_linhas_predicao": 0,
             "limiar_minino_acc": limiar_minino_acc,
             "valor_medido_acc": .0,
-            "qtd_dados_treinamento": qtd_dados_treinamento,
+            "qtd_dados_treino": qtd_dados_treino,
             "qtd_dados_retreino_01": qtd_dados_retreino_01,
             "qtd_dados_retreino_02": qtd_dados_retreino_02,
             "qtd_dados_retreino_03": qtd_dados_retreino_03,
