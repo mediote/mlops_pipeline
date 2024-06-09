@@ -83,7 +83,11 @@ def init_pipeline(params: dict) -> str:
     now = datetime.now(saopaulo_timezone)
 
     run_state = get_pipeline_run_state(
-        params={nome_modal, nome_projeto, nome_modelo, delta_path})
+        params={"nome_modal": nome_modal,
+                "nome_projeto": nome_projeto,
+                "nome_modelo": nome_modelo,
+                "delta_path": delta_path}
+    )
 
     if run_state is not None:
         run_state["percentual_restante_validade_modelo"] = get_model_remaining_validity_percentage(
@@ -99,7 +103,9 @@ def init_pipeline(params: dict) -> str:
                 run_state["data_inicio_etapa_pipeline"] = data_inicio_etapa_pipeline
                 run_state["data_fim_etapa_pipeline"] = datetime.now(
                     saopaulo_timezone)
-                set_pipeline_run_state(params={run_state, delta_path})
+                set_pipeline_run_state(
+                    params={"run_state": run_state,
+                            "delta_path": delta_path})
                 return status_execucao_pipeline
             else:
                 return "red"
@@ -112,7 +118,9 @@ def init_pipeline(params: dict) -> str:
             run_state["data_inicio_etapa_pipeline"] = data_inicio_etapa_pipeline
             run_state["data_fim_etapa_pipeline"] = datetime.now(
                 saopaulo_timezone)
-            set_pipeline_run_state(params={run_state, delta_path})
+            set_pipeline_run_state(
+                params={"run_state": run_state,
+                        "delta_path": delta_path})
             return "red"
         else:
             run_state["id_pipeline"] = run_state["id_pipeline"].iloc[0] + 1
@@ -125,7 +133,9 @@ def init_pipeline(params: dict) -> str:
             run_state["data_inicio_etapa_pipeline"] = data_inicio_etapa_pipeline
             run_state["data_fim_etapa_pipeline"] = datetime.now(
                 saopaulo_timezone)
-            set_pipeline_run_state(params={run_state, delta_path})
+            set_pipeline_run_state(
+                params={"run_state": run_state,
+                        "delta_path": delta_path})
             return "white"
     else:
         run_state = pd.DataFrame([{
@@ -166,7 +176,9 @@ def init_pipeline(params: dict) -> str:
             "email_usuario": email_usuario,
             "data_criacao": datetime.now(saopaulo_timezone)
         }])
-        set_pipeline_run_state(params={run_state, delta_path})
+        set_pipeline_run_state(
+            params={"run_state": run_state,
+                    "delta_path": delta_path})
         return "white"
 
 
@@ -211,4 +223,6 @@ def update_pipeline_execution_step(params: dict, delta_path: str) -> str:
     run_state["nome_etapa_pipeline"] = nome_etapa_pipeline
     run_state["data_inicio_etapa_pipeline"] = data_inicio_etapa_pipeline
     run_state["data_fim_etapa_pipeline"] = datetime.now(saopaulo_timezone)
-    set_pipeline_run_state(params={run_state, delta_path})
+    set_pipeline_run_state(
+        params={"run_state": run_state,
+                "delta_path": delta_path})
