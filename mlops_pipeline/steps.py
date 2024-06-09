@@ -28,7 +28,7 @@ class InitPipelineParams(BaseModel):
     delta_path: str
 
 
-def init_pipeline(params: InitPipelineParams) -> str:
+def init_pipeline(params: dict) -> str:
     """
     Inicializa o pipeline com os parâmetros fornecidos e gerencia o estado da execução do pipeline.
 
@@ -178,7 +178,7 @@ class ExecutionStepParams(BaseModel):
     data_inicio_etapa_pipeline: datetime
 
 
-def update_pipeline_execution_step(params: ExecutionStepParams) -> str:
+def update_pipeline_execution_step(params: dict, delta_path: str) -> str:
     """
     Atualiza a execução de uma etapa no pipeline.
 

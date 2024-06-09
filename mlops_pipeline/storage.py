@@ -12,7 +12,7 @@ class GetPipelineRunStateParams(BaseModel):
     delta_path: str
 
 
-def get_pipeline_run_state(params: GetPipelineRunStateParams) -> pd.DataFrame:
+def get_pipeline_run_state(params: dict) -> pd.DataFrame:
     """
     Obtém o estado atual da execução do pipeline com base no modal, projeto e modelo fornecidos.
 
@@ -63,7 +63,7 @@ class SetPipelineRunStateParams(BaseModel):
     delta_path: str
 
 
-def set_pipeline_run_state(params: SetPipelineRunStateParams):
+def set_pipeline_run_state(params: dict):
     """
     Grava o estado atual da execução do pipeline na tabela Delta Lake.
     Args:
@@ -93,7 +93,7 @@ class LoadFeaturesParams(BaseModel):
     origin_table: str
 
 
-def load_features(params: LoadFeaturesParams):
+def load_features(params: dict):
     """
     Carrega os dados de uma tabela de origem com base em uma janela de treinamento especificada.
     Args:
