@@ -25,9 +25,10 @@ class InitPipelineParams(BaseModel):
     qtd_dados_retreino_03: int
     email_usuario: str
     data_inicio_etapa_pipeline: datetime
+    delta_path: str
 
 
-def init_pipeline(params: dict, delta_path: str) -> str:
+def init_pipeline(params: InitPipelineParams) -> str:
     """
     Inicializa o pipeline com os parâmetros fornecidos e gerencia o estado da execução do pipeline.
 
@@ -76,12 +77,13 @@ def init_pipeline(params: dict, delta_path: str) -> str:
     qtd_dados_retreino_03 = validated_params.qtd_dados_retreino_03
     email_usuario = validated_params.email_usuario
     data_inicio_etapa_pipeline = validated_params.data_inicio_etapa_pipeline
+    delta_path = validated_params.delta_path
 
     saopaulo_timezone = pytz.timezone("America/Sao_Paulo")
     now = datetime.now(saopaulo_timezone)
 
     run_state = get_pipeline_run_state(
-        nome_modal, nome_projeto, nome_modelo, delta_path)
+        params={nome_modal, nome_projeto, nome_modelo, delta_path})
 
     if run_state is not None:
         run_state["percentual_restante_validade_modelo"] = get_model_remaining_validity_percentage(
@@ -97,32 +99,33 @@ def init_pipeline(params: dict, delta_path: str) -> str:
                 run_state["data_inicio_etapa_pipeline"] = data_inicio_etapa_pipeline
                 run_state["data_fim_etapa_pipeline"] = datetime.now(
                     saopaulo_timezone)
-                set_pipeline_run_state(run_state, delta_path)
+                set_pipeline_run_state(params={run_state, delta_path})
                 return status_execucao_pipeline
             else:
                 return "red"
         elif run_state["qtd_medida_retreino"].iloc[0] >= qtd_permitida_retreino:
             run_state["id_pipeline"] = run_state["id_pipeline"].iloc[0] + 1
             run_state["id_etapa_pipeline"] = 0
-            run_state["resumo_execucao_etapa"] = "Limite de Retreino Por Drift Excedido"
+            run_state["nome_etapa_pipeline"] = "Inicializa Pipeline"
+            run_state["resumo_execucao_etapa"] = "Limite de Retreino Excedido"
             run_state["status_execucao_pipeline"] = "red"
             run_state["data_inicio_etapa_pipeline"] = data_inicio_etapa_pipeline
             run_state["data_fim_etapa_pipeline"] = datetime.now(
                 saopaulo_timezone)
-            set_pipeline_run_state(run_state, delta_path)
+            set_pipeline_run_state(params={run_state, delta_path})
             return "red"
         else:
             run_state["id_pipeline"] = run_state["id_pipeline"].iloc[0] + 1
-            run_state["resumo_execucao_etapa"] = "Retreino por Validade"
-            run_state["status_execucao_pipeline"] = "yellow"
-            run_state["passo_etapa_retreino_modelo"] = run_state["passo_etapa_retreino_modelo"].iloc[0] + 1
             run_state["id_etapa_pipeline"] = 0
+            run_state["nome_etapa_pipeline"] = "Inicializa Pipeline"
+            run_state["resumo_execucao_etapa"] = "Retreino por Validade"
+            run_state["status_execucao_pipeline"] = "white"
             run_state["valor_medido_metrica_modelo"] = 0
             run_state["valor_medido_drift"] = 0
             run_state["data_inicio_etapa_pipeline"] = data_inicio_etapa_pipeline
             run_state["data_fim_etapa_pipeline"] = datetime.now(
                 saopaulo_timezone)
-            set_pipeline_run_state(run_state, delta_path)
+            set_pipeline_run_state(params={run_state, delta_path})
             return "white"
     else:
         run_state = pd.DataFrame([{
@@ -163,7 +166,7 @@ def init_pipeline(params: dict, delta_path: str) -> str:
             "email_usuario": email_usuario,
             "data_criacao": datetime.now(saopaulo_timezone)
         }])
-        set_pipeline_run_state(run_state, delta_path)
+        set_pipeline_run_state(params={run_state, delta_path})
         return "white"
 
 
@@ -175,7 +178,7 @@ class ExecutionStepParams(BaseModel):
     data_inicio_etapa_pipeline: datetime
 
 
-def update_pipeline_execution_step(params: dict, delta_path: str) -> str:
+def update_pipeline_execution_step(params: ExecutionStepParams) -> str:
     """
     Atualiza a execução de uma etapa no pipeline.
 
@@ -210,6 +213,6 @@ def update_pipeline_execution_step(params: dict, delta_path: str) -> str:
     run_state["data_fim_etapa_pipeline"] = datetime.now(saopaulo_timezone)
 
     try:
-        set_pipeline_run_state(run_state, delta_path)
+        set_pipeline_run_state(params={run_state, delta_path})
     except Exception as e:
         raise Exception(f"Erro ao atualizar a execução da etapa: {e}")
