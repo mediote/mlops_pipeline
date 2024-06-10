@@ -234,11 +234,11 @@ class HandleTrainEvauateModelParams(BaseModel):
     nome_modelo: str
     limiar_minino_acc: float
     valor_medido_acc: float
-    duracao_treinamento_modelo: str
+    duracao_treinamento_modelo: float
     utilizacao_cpu: Optional[float] = None
     utilizacao_gpu: Optional[float] = None
     utilizacao_memoria: Optional[float] = None
-    versao_modelo: str
+    versao_modelo: Optional[float] = str
     data_inicio_etapa_pipeline: datetime
 
 
