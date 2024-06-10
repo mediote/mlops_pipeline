@@ -125,8 +125,8 @@ def init_pipeline(params: Dict) -> str:
             run_state["nome_etapa_pipeline"] = "Inicializa Pipeline"
             run_state["resumo_execucao_etapa"] = "Retreino por Validade"
             run_state["status_execucao_pipeline"] = "white"
-            run_state["valor_medido_metrica_modelo"] = 0
-            run_state["valor_medido_drift"] = 0
+            run_state["valor_medido_metrica_modelo"] = None
+            run_state["valor_medido_drift"] = None
             run_state["data_inicio_etapa_pipeline"] = data_inicio_etapa_pipeline
             run_state["data_fim_etapa_pipeline"] = datetime.now(
                 saopaulo_timezone)
@@ -153,7 +153,7 @@ def init_pipeline(params: Dict) -> str:
             "duracao_treinamento_modelo": 0,
             "qtd_dados_predicao": 0,
             "limiar_minino_acc": limiar_minino_acc,
-            "valor_medido_acc": .0,
+            "valor_medido_acc": None,
             "qtd_dados_treino": qtd_dados_treino,
             "qtd_dados_retreino_01": qtd_dados_retreino_01,
             "qtd_dados_retreino_02": qtd_dados_retreino_02,
@@ -162,11 +162,11 @@ def init_pipeline(params: Dict) -> str:
             "qtd_permitida_retreino": qtd_permitida_retreino,
             "qtd_medida_retreino": 0,
             "limiar_maximo_drift": limiar_maximo_drift,
-            "valor_medido_drift": .0,
+            "valor_medido_drift": None,
             "nome_cluster_execucao": "adb_dataops_ds_dev",
-            "utilizacao_cpu": .0,
-            "utilizacao_gpu": .0,
-            "utilizacao_memoria": .0,
+            "utilizacao_cpu": None,
+            "utilizacao_gpu": None,
+            "utilizacao_memoria": None,
             "tipo_esteira": tipo_esteira,
             "email_usuario": email_usuario,
             "data_criacao": datetime.now(saopaulo_timezone)
@@ -179,6 +179,7 @@ class ExecutionStepParams(BaseModel):
     data_inicio_etapa_pipeline: datetime
     nome_etapa_pipeline: str
     utilizacao_cpu: Optional[float] = None
+    utilizacao_gpu: Optional[float] = None
     utilizacao_memoria: Optional[float] = None
     resumo_execucao_etapa: Optional[str] = None
 
@@ -207,6 +208,7 @@ def update_pipeline_execution_step(params: Dict, run_state: pd.DataFrame, delta_
     run_state["data_fim_etapa_pipeline"] = datetime.now(saopaulo_timezone)
     run_state["nome_etapa_pipeline"] = validated_params.nome_etapa_pipeline
     run_state["utilizacao_cpu"] = validated_params.utilizacao_cpu
+    run_state["utilizacao_gpu"] = validated_params.utilizacao_gpu
     run_state["utilizacao_memoria"] = validated_params.utilizacao_memoria
     run_state["resumo_execucao_etapa"] = validated_params.resumo_execucao_etapa
 
