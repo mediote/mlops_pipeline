@@ -21,7 +21,7 @@ CREATE EXTERNAL TABLE controle.tbl_controle_esteira_3 (
     data_validade_modelo STRING,                -- Data de validade do modelo
     dias_validade_modelo BIGINT,                -- Dias de validade do modelo
     percentual_restante_validade_modelo DOUBLE, -- Percentual de validade restante do modelo
-    duracao_treinamento_modelo BIGINT,          -- Duração do treinamento do modelo (em segundos)
+    duracao_treinamento_modelo DOUBLE,          -- Duração do treinamento do modelo (em segundos)
     qtd_dados_predicao BIGINT,                  -- Quantidade de linhas usadas na predição
     limiar_minino_acc DOUBLE,                   -- Limiar mínimo da métrica do modelo
     valor_medido_acc DOUBLE,                    --Valor medido da métrica do modelo

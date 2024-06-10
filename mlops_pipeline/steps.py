@@ -235,11 +235,11 @@ class HandleTrainEvauateModelParams(BaseModel):
     limiar_minino_acc: float
     valor_medido_acc: float
     duracao_treinamento_modelo: float
+    data_inicio_etapa_pipeline: datetime
     utilizacao_cpu: Optional[float] = None
     utilizacao_gpu: Optional[float] = None
     utilizacao_memoria: Optional[float] = None
     versao_modelo: Optional[str] = None
-    data_inicio_etapa_pipeline: datetime
 
 
 def handle_train_and_evaluate_model(params: Dict, run_state: pd.DataFrame, delta_path: str) -> str:
@@ -310,3 +310,68 @@ def handle_train_and_evaluate_model(params: Dict, run_state: pd.DataFrame, delta
 
     else:
         return "end_loop"
+
+
+class HandleDriftPredictParams(BaseModel):
+    data_inicio_etapa_pipeline: datetime
+    valor_medido_drift: float
+    qtd_dados_predicao = Optional[int] = None
+    utilizacao_cpu: Optional[float] = None
+    utilizacao_gpu: Optional[float] = None
+    utilizacao_memoria: Optional[float] = None
+
+
+def handle_drift_and_predict(params: Dict, run_state: pd.DataFrame, delta_path: str) -> str:
+    """
+    Função para monitorar o drift de dados e fazer previsões, atualizando o estado da execução.
+
+    Parameters:
+    - params (Dict): Dicionário com os parâmetros necessários para a função.
+    - run_state (pd.DataFrame): DataFrame com o estado atual da execução.
+    - delta_path (str): Caminho para salvar o estado atualizado.
+
+    Returns:
+    - str: Status do modelo ("green", "yellow", "red").
+    """
+    try:
+        validated_params = HandleDriftPredictParams(**params)
+    except ValidationError as e:
+        raise ValueError(f"Erro na validação dos parâmetros: {e}")
+
+    data_inicio_etapa_pipeline = validated_params.data_inicio_etapa_pipeline
+    valor_medido_drift = validated_params.valor_medido_drift
+    qtd_dados_predicao = validated_params.qtd_dados_predicao
+    utilizacao_cpu = validated_params.utilizacao_cpu
+    utilizacao_gpu = validated_params.utilizacao_cpu
+    utilizacao_memoria = validated_params.utilizacao_memoria
+
+    now = datetime.now(saopaulo_timezone)
+
+    if run_state is not None:
+        run_state["id_etapa_pipeline"] = run_state["id_etapa_pipeline"].iloc[0] + 1
+        run_state["data_inicio_etapa_pipeline"] = data_inicio_etapa_pipeline
+        run_state["data_fim_etapa_pipeline"] = now
+        run_state["valor_medido_drift"] = valor_medido_drift
+        run_state["nome_etapa_pipeline"] = "Avalia Drift e Faz Predicoes"
+        run_state["utilizacao_cpu"] = utilizacao_cpu
+        run_state["utilizacao_gpu"] = utilizacao_gpu
+        run_state["utilizacao_memoria"] = utilizacao_memoria
+
+        if valor_medido_drift <= run_state["limiar_maximo_drift"].iloc[0]:
+            status_modelo = "green"
+            run_state["status_modelo"] = status_modelo
+            run_state["resumo_execucao_etapa"] = "Sem Drift / Predicoes com Sucesso"
+            run_state["qtd_dados_predicao"] = qtd_dados_predicao
+            run_state['passo_etapa_retreino_modelo'] = 0
+        else:
+            status_modelo = "yellow"
+            run_state["status_modelo"] = status_modelo
+            run_state['passo_etapa_retreino_modelo'] = run_state['passo_etapa_retreino_modelo'].iloc[0] + 1
+            run_state["status_execucao_pipeline"] = "yellow"
+            run_state["resumo_execucao_etapa"] = "Com Drift / Preparando Retreino"
+            run_state['qtd_permitida_retreino'] = run_state['qtd_permitida_retreino'].iloc[0] + 1
+
+        set_pipeline_run_state(run_state, delta_path)
+        return status_modelo
+    else:
+        return "red"
