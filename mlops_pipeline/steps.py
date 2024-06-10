@@ -34,23 +34,23 @@ def init_pipeline(params: Dict) -> str:
     Inicializa o pipeline com os parâmetros fornecidos e gerencia o estado da execução do pipeline.
 
     Args:
-        storage (Storage): Instância da classe Storage para acessar e manipular dados no Delta Lake.
-        params (dict): Dicionário contendo os parâmetros do pipeline.
-            - nome_modal (str): Nome do modal.
-            - nome_projeto (str): Nome do projeto.
-            - nome_modelo (str): Nome do modelo.
-            - tipo_modelo (str): Tipo do modelo.
-            - tipo_esteira (int): Tipo de esteira.
-            - qtd_permitida_retreino (int): Quantidade permitida de retreino.
-            - limiar_maximo_drift (float): Limiar máximo de drift.
-            - limiar_minino_acc (float): Limiar mínimo de acurácia.
-            - dias_validade_modelo (int): Dias de validade do modelo.
-            - qtd_dados_treino (int): Quantidade de dias de treino inicial.
-            - qtd_dados_retreino_01 (int): Quantidade de dias para o primeiro range de retreino.
-            - qtd_dados_retreino_02 (int): Quantidade de dias para o segundo range de retreino.
-            - qtd_dados_retreino_03 (int): Quantidade de dias para o terceiro range de retreino.
-            - email_usuario (str): Email do usuário.
-            - data_inicio_etapa_pipeline (datetime): Data de início da etapa de execução do pipeline.
+        params (dict): Dicionário contendo os parâmetros do pipeline. Os seguintes parâmetros são esperados:
+            - nome_modal (str): Nome do modal. (Obrigatório)
+            - nome_projeto (str): Nome do projeto. (Obrigatório)
+            - nome_modelo (str): Nome do modelo. (Obrigatório)
+            - tipo_modelo (str): Tipo do modelo. (Obrigatório)
+            - tipo_esteira (int): Tipo de esteira. (Obrigatório)
+            - qtd_permitida_retreino (int): Quantidade permitida de retreino. (Obrigatório)
+            - limiar_maximo_drift (float): Limiar máximo de drift. (Obrigatório)
+            - limiar_minino_acc (float): Limiar mínimo de acurácia. (Obrigatório)
+            - dias_validade_modelo (int): Dias de validade do modelo. (Obrigatório)
+            - qtd_dados_treino (int): Quantidade de dados para treino inicial. (Obrigatório)
+            - qtd_dados_retreino_01 (int): Quantidade de dados para o primeiro range de retreino. (Obrigatório)
+            - qtd_dados_retreino_02 (int): Quantidade de dados para o segundo range de retreino. (Obrigatório)
+            - qtd_dados_retreino_03 (int): Quantidade de dados para o terceiro range de retreino. (Obrigatório)
+            - email_usuario (str): Email do usuário. (Obrigatório)
+            - data_inicio_etapa_pipeline (datetime): Data de início da etapa de execução do pipeline. (Obrigatório)
+            - delta_path (str): Caminho para salvar o estado atualizado. (Obrigatório)
 
     Returns:
         str: Status da execução do pipeline, que pode ser "green", "red", "yellow" ou "white".
@@ -189,7 +189,16 @@ def update_pipeline_execution_step(params: Dict, run_state: pd.DataFrame, delta_
     Atualiza a execução de uma etapa no pipeline.
 
     Args:
-        params (dict): Dicionário com os parâmetros de execução da etapa.
+        params (dict): Dicionário com os parâmetros de execução da etapa. Os seguintes parâmetros são esperados:
+            - nome_modal (str): Nome do modal. (Obrigatório)
+            - nome_projeto (str): Nome do projeto. (Obrigatório)
+            - nome_modelo (str): Nome do modelo. (Obrigatório)
+            - data_inicio_etapa_pipeline (datetime): Data e hora de início da etapa do pipeline. (Obrigatório)
+            - nome_etapa_pipeline (str): Nome da etapa atual da execução. (Obrigatório)
+            - utilizacao_cpu (float, opcional): Utilização de CPU durante a execução da etapa.
+            - utilizacao_memoria (float, opcional): Utilização de memória durante a execução da etapa.
+            - resumo_execucao_etapa (str, opcional): Resumo da execução da etapa.
+
         run_state (pd.DataFrame): DataFrame com o estado atual da execução.
         delta_path (str): Caminho para salvar o estado atualizado.
 
@@ -208,8 +217,90 @@ def update_pipeline_execution_step(params: Dict, run_state: pd.DataFrame, delta_
     run_state["data_fim_etapa_pipeline"] = datetime.now(saopaulo_timezone)
     run_state["nome_etapa_pipeline"] = validated_params.nome_etapa_pipeline
     run_state["utilizacao_cpu"] = validated_params.utilizacao_cpu
-    run_state["utilizacao_gpu"] = validated_params.utilizacao_gpu
     run_state["utilizacao_memoria"] = validated_params.utilizacao_memoria
     run_state["resumo_execucao_etapa"] = validated_params.resumo_execucao_etapa
 
     set_pipeline_run_state(run_state, delta_path)
+
+
+class HandleTrainEvauateModelParams(BaseModel):
+    nome_modelo: str
+    limiar_minino_acc: float
+    valor_medido_acc: float
+    duracao_treinamento_modelo: str
+    utilizacao_cpu: Optional[float] = None
+    utilizacao_gpu: Optional[float] = None
+    utilizacao_memoria: Optional[float] = None
+    versao_modelo: str
+    data_inicio_etapa_pipeline: datetime
+
+
+def handle_train_and_evaluate_model(params: Dict, run_state: pd.DataFrame, delta_path: str) -> str:
+    """
+    Função para treinar e avaliar o modelo, atualizando o estado da execução.
+
+    Parameters:
+    - params (Dict): Dicionário com os parâmetros necessários para a função.
+    - run_state (pd.DataFrame): DataFrame com o estado atual da execução.
+    - delta_path (str): Caminho para salvar o estado atualizado.
+
+    Returns:
+    - str: Mensagem indicando o próximo passo ("end_loop" ou "continue_loop").
+    """
+    try:
+        validated_params = HandleTrainEvauateModelParams(**params)
+    except ValidationError as e:
+        raise ValueError(f"Erro na validação dos parâmetros: {e}")
+
+    data_inicio_etapa_pipeline = validated_params.data_inicio_etapa_pipeline
+    nome_modelo = validated_params.nome_modelo
+    limiar_minino_acc = validated_params.limiar_minino_acc
+    valor_medido_acc = validated_params.valor_medido_acc
+    duracao_treinamento_modelo = validated_params.duracao_treinamento_modelo
+    versao_modelo = validated_params.versao_modelo
+    utilizacao_cpu = validated_params.utilizacao_cpu
+    utilizacao_gpu = validated_params.utilizacao_gpu
+    utilizacao_memoria = validated_params.utilizacao_memoria
+
+    saopaulo_timezone = pytz.timezone("America/Sao_Paulo")
+    now = datetime.now(saopaulo_timezone)
+
+    if run_state is not None:
+        run_state["data_inicio_etapa_pipeline"] = data_inicio_etapa_pipeline
+        run_state['id_etapa_pipeline'] = run_state['id_etapa_pipeline'][0] + 1
+        run_state['valor_medido_acc'] = valor_medido_acc
+        run_state['duracao_treinamento_modelo'] = duracao_treinamento_modelo
+        run_state['nome_modelo'] = nome_modelo
+        run_state["nome_etapa_pipeline"] = "Treina e Avalia Modelos"
+        run_state['utilizacao_cpu'] = utilizacao_cpu
+        run_state['utilizacao_gpu'] = utilizacao_gpu
+        run_state['utilizacao_memoria'] = utilizacao_memoria
+
+        if valor_medido_acc >= limiar_minino_acc:
+            run_state['status_execucao_pipeline'] = 'green'
+            run_state['status_modelo'] = 'green'
+            run_state["resumo_execucao_etapa"] = "Treinamento Terminado com Sucesso"
+            run_state['passo_etapa_retreino_modelo'] = 0
+            run_state["data_fim_etapa_pipeline"] = now
+            run_state["versao_modelo"] = versao_modelo
+            exit_message = 'end_loop'
+        else:
+            if run_state['passo_etapa_retreino_modelo'][0] < 3:
+                run_state["resumo_execucao_etapa"] = "Retreino por Desempenho"
+                run_state['status_execucao_pipeline'] = 'yellow'
+                run_state['status_modelo'] = 'white'
+                run_state['passo_etapa_retreino_modelo'] = run_state['passo_etapa_retreino_modelo'][0] + 1
+                run_state["data_fim_etapa_pipeline"] = now
+                exit_message = 'continue_loop'
+            else:
+                run_state["resumo_execucao_etapa"] = "Terminado por Excesso de Retreino"
+                run_state['status_execucao_pipeline'] = 'red'
+                run_state['status_modelo'] = 'red'
+                run_state["data_fim_etapa_pipeline"] = now
+                exit_message = 'end_loop'
+
+        set_pipeline_run_state(run_state, delta_path)
+        return exit_message
+
+    else:
+        return "end_loop"
