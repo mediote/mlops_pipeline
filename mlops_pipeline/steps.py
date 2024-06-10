@@ -238,7 +238,7 @@ class HandleTrainEvauateModelParams(BaseModel):
     utilizacao_cpu: Optional[float] = None
     utilizacao_gpu: Optional[float] = None
     utilizacao_memoria: Optional[float] = None
-    versao_modelo: Optional[float] = str
+    versao_modelo: Optional[str] = None
     data_inicio_etapa_pipeline: datetime
 
 
