@@ -3,7 +3,7 @@ from typing import Dict, Optional
 
 import pandas as pd
 import pytz
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
 from mlops_pipeline.storage import (get_pipeline_run_state,
                                     set_pipeline_run_state)
@@ -315,7 +315,7 @@ def handle_train_and_evaluate_model(params: Dict, run_state: pd.DataFrame, delta
 class HandleDriftPredictParams(BaseModel):
     data_inicio_etapa_pipeline: datetime
     valor_medido_drift: float
-    qtd_dados_predicao = Optional[int] = 0
+    Optional[int] = Field(default=0)
     utilizacao_cpu: Optional[float] = None
     utilizacao_gpu: Optional[float] = None
     utilizacao_memoria: Optional[float] = None
