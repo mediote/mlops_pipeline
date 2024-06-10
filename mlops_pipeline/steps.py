@@ -361,6 +361,8 @@ def handle_drift_and_predict(params: Dict, run_state: pd.DataFrame, delta_path: 
             run_state["resumo_execucao_etapa"] = "Sem Drift / Predicoes com Sucesso"
             run_state["qtd_dados_predicao"] = qtd_dados_predicao
             run_state['passo_etapa_retreino_modelo'] = 0
+            run_state["status_execucao_pipeline"] = status_modelo
+
         else:
             status_modelo = "yellow"
             run_state["status_modelo"] = status_modelo
@@ -368,6 +370,7 @@ def handle_drift_and_predict(params: Dict, run_state: pd.DataFrame, delta_path: 
             run_state["status_execucao_pipeline"] = "yellow"
             run_state["resumo_execucao_etapa"] = "Com Drift / Preparando Retreino"
             run_state['qtd_permitida_retreino'] = run_state['qtd_permitida_retreino'].iloc[0] + 1
+            run_state["status_execucao_pipeline"] = status_modelo
 
         set_pipeline_run_state(run_state, delta_path)
         return status_modelo
