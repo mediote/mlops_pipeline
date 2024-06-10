@@ -9,6 +9,8 @@ from mlops_pipeline.storage import (get_pipeline_run_state,
                                     set_pipeline_run_state)
 from mlops_pipeline.utils import get_model_remaining_validity_percentage
 
+saopaulo_timezone = pytz.timezone("America/Sao_Paulo")
+
 
 class InitPipelineParams(BaseModel):
     nome_modal: str
@@ -80,7 +82,6 @@ def init_pipeline(params: Dict) -> str:
     data_inicio_etapa_pipeline = validated_params.data_inicio_etapa_pipeline
     delta_path = validated_params.delta_path
 
-    saopaulo_timezone = pytz.timezone("America/Sao_Paulo")
     now = datetime.now(saopaulo_timezone)
 
     run_state = get_pipeline_run_state(
@@ -210,15 +211,21 @@ def update_pipeline_execution_step(params: Dict, run_state: pd.DataFrame, delta_
     except ValidationError as e:
         raise ValueError(f"Erro na validação dos parâmetros: {e}")
 
-    saopaulo_timezone = pytz.timezone("America/Sao_Paulo")
+    # Atribuindo parâmetros validados a variáveis locais
+    data_inicio_etapa_pipeline = validated_params.data_inicio_etapa_pipeline
+    nome_etapa_pipeline = validated_params.nome_etapa_pipeline
+    utilizacao_cpu = validated_params.utilizacao_cpu
+    utilizacao_memoria = validated_params.utilizacao_memoria
+    resumo_execucao_etapa = validated_params.resumo_execucao_etapa
 
+    # Atualizando o estado da execução
     run_state["id_etapa_pipeline"] = run_state["id_etapa_pipeline"].iloc[0] + 1
-    run_state["data_inicio_etapa_pipeline"] = validated_params.data_inicio_etapa_pipeline
+    run_state["data_inicio_etapa_pipeline"] = data_inicio_etapa_pipeline
     run_state["data_fim_etapa_pipeline"] = datetime.now(saopaulo_timezone)
-    run_state["nome_etapa_pipeline"] = validated_params.nome_etapa_pipeline
-    run_state["utilizacao_cpu"] = validated_params.utilizacao_cpu
-    run_state["utilizacao_memoria"] = validated_params.utilizacao_memoria
-    run_state["resumo_execucao_etapa"] = validated_params.resumo_execucao_etapa
+    run_state["nome_etapa_pipeline"] = nome_etapa_pipeline
+    run_state["utilizacao_cpu"] = utilizacao_cpu
+    run_state["utilizacao_memoria"] = utilizacao_memoria
+    run_state["resumo_execucao_etapa"] = resumo_execucao_etapa
 
     set_pipeline_run_state(run_state, delta_path)
 
@@ -262,7 +269,6 @@ def handle_train_and_evaluate_model(params: Dict, run_state: pd.DataFrame, delta
     utilizacao_gpu = validated_params.utilizacao_gpu
     utilizacao_memoria = validated_params.utilizacao_memoria
 
-    saopaulo_timezone = pytz.timezone("America/Sao_Paulo")
     now = datetime.now(saopaulo_timezone)
 
     if run_state is not None:
