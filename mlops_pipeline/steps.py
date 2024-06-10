@@ -232,7 +232,6 @@ def update_pipeline_execution_step(params: Dict, run_state: pd.DataFrame, delta_
 
 class HandleTrainEvauateModelParams(BaseModel):
     nome_modelo: str
-    limiar_minino_acc: float
     valor_medido_acc: float
     duracao_treinamento_modelo: float
     data_inicio_etapa_pipeline: datetime
@@ -261,7 +260,6 @@ def handle_train_and_evaluate_model(params: Dict, run_state: pd.DataFrame, delta
 
     data_inicio_etapa_pipeline = validated_params.data_inicio_etapa_pipeline
     nome_modelo = validated_params.nome_modelo
-    limiar_minino_acc = validated_params.limiar_minino_acc
     valor_medido_acc = validated_params.valor_medido_acc
     duracao_treinamento_modelo = validated_params.duracao_treinamento_modelo
     versao_modelo = validated_params.versao_modelo
@@ -282,7 +280,7 @@ def handle_train_and_evaluate_model(params: Dict, run_state: pd.DataFrame, delta
         run_state['utilizacao_gpu'] = utilizacao_gpu
         run_state['utilizacao_memoria'] = utilizacao_memoria
 
-        if valor_medido_acc >= limiar_minino_acc:
+        if valor_medido_acc >= run_state["limiar_minino_acc"].iloc[0]:
             run_state['status_execucao_pipeline'] = 'green'
             run_state['status_modelo'] = 'green'
             run_state["resumo_execucao_etapa"] = "Treinamento Terminado com Sucesso"
