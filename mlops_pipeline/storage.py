@@ -53,10 +53,10 @@ def set_pipeline_run_state(run_state: pd.DataFrame,  delta_path: str):
     Raises:
         Exception: Se ocorrer um erro ao inserir dados na tabela.
     """
+    run_state["data_criacao"] = datetime.now(saopaulo_timezone)
     try:
         # Cria um Spark DataFrame a partir do pandas DataFrame
         sdf = spark.createDataFrame(run_state)
-        sdf["data_criacao"] = datetime.now(saopaulo_timezone)
         # Escreve no Delta Lake
         sdf.write.format("delta").mode('append').save(delta_path)
     except Exception as e:
