@@ -145,29 +145,29 @@ def init_pipeline(params: Dict) -> str:
             "data_fim_etapa_pipeline": datetime.now(saopaulo_timezone),
             "resumo_execucao_etapa": "Preparacao para Treinamento Inicial",
             "nome_modelo": nome_modelo,
-            "versao_modelo": None,
+            "versao_modelo": 0,
             "tipo_modelo": tipo_modelo,
             "status_modelo": "white",
             "data_validade_modelo": (now + timedelta(days=dias_validade_modelo)).strftime("%Y-%m-%d"),
             "dias_validade_modelo": dias_validade_modelo,
             "percentual_restante_validade_modelo": 1.0,
-            "duracao_treinamento_modelo": None,
-            "qtd_dados_predicao": None,
+            "duracao_treinamento_modelo": .0,
+            "qtd_dados_predicao": 0,
             "limiar_minino_acc": limiar_minino_acc,
-            "valor_medido_acc": None,
+            "valor_medido_acc": .0,
             "qtd_dados_treino": qtd_dados_treino,
             "qtd_dados_retreino_01": qtd_dados_retreino_01,
             "qtd_dados_retreino_02": qtd_dados_retreino_02,
             "qtd_dados_retreino_03": qtd_dados_retreino_03,
             "passo_etapa_retreino_modelo": 0,
             "qtd_permitida_retreino": qtd_permitida_retreino,
-            "qtd_medida_retreino": None,
+            "qtd_medida_retreino": 0,
             "limiar_maximo_drift": limiar_maximo_drift,
-            "valor_medido_drift": None,
+            "valor_medido_drift": .0,
             "nome_cluster_execucao": "adb_dataops_ds_dev",
-            "utilizacao_cpu": None,
-            "utilizacao_gpu": None,
-            "utilizacao_memoria": None,
+            "utilizacao_cpu": .0,
+            "utilizacao_gpu": .0,
+            "utilizacao_memoria": .0,
             "tipo_esteira": tipo_esteira,
             "email_usuario": email_usuario,
             "data_criacao": datetime.now(saopaulo_timezone)
@@ -179,10 +179,10 @@ def init_pipeline(params: Dict) -> str:
 class ExecutionStepParams(BaseModel):
     data_inicio_etapa_pipeline: datetime
     nome_etapa_pipeline: str
-    utilizacao_cpu: Optional[float] = None
-    utilizacao_gpu: Optional[float] = None
-    utilizacao_memoria: Optional[float] = None
-    resumo_execucao_etapa: Optional[str] = None
+    utilizacao_cpu: Optional[float] = .0
+    utilizacao_gpu: Optional[float] = .0
+    utilizacao_memoria: Optional[float] = .0
+    resumo_execucao_etapa: Optional[str] = ""
 
 
 def update_pipeline_execution_step(params: Dict, run_state: pd.DataFrame, delta_path: str):
@@ -235,10 +235,10 @@ class HandleTrainEvauateModelParams(BaseModel):
     valor_medido_acc: float
     duracao_treinamento_modelo: float
     data_inicio_etapa_pipeline: datetime
-    utilizacao_cpu: Optional[float] = None
-    utilizacao_gpu: Optional[float] = None
-    utilizacao_memoria: Optional[float] = None
-    versao_modelo: Optional[str] = None
+    utilizacao_cpu: Optional[float] = .0
+    utilizacao_gpu: Optional[float] = .0
+    utilizacao_memoria: Optional[float] = .0
+    versao_modelo: Optional[str] = ""
 
 
 def handle_train_and_evaluate_model(params: Dict, run_state: pd.DataFrame, delta_path: str) -> str:
@@ -314,9 +314,9 @@ class HandleDriftPredictParams(BaseModel):
     data_inicio_etapa_pipeline: datetime
     valor_medido_drift: float
     qtd_dados_predicao: Optional[int] = Field(default=0)
-    utilizacao_cpu: Optional[float] = None
-    utilizacao_gpu: Optional[float] = None
-    utilizacao_memoria: Optional[float] = None
+    utilizacao_cpu: Optional[float] = .0
+    utilizacao_gpu: Optional[float] = .0
+    utilizacao_memoria: Optional[float] = .0
 
 
 def handle_drift_and_predict(params: Dict, run_state: pd.DataFrame, delta_path: str) -> str:
