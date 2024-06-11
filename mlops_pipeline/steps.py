@@ -145,7 +145,7 @@ def init_pipeline(params: Dict) -> str:
             "data_fim_etapa_pipeline": datetime.now(saopaulo_timezone),
             "resumo_execucao_etapa": "Preparacao para Treinamento Inicial",
             "nome_modelo": nome_modelo,
-            "versao_modelo": 0,
+            "versao_modelo": " ",
             "tipo_modelo": tipo_modelo,
             "status_modelo": "white",
             "data_validade_modelo": (now + timedelta(days=dias_validade_modelo)).strftime("%Y-%m-%d"),
@@ -238,7 +238,7 @@ class HandleTrainEvauateModelParams(BaseModel):
     utilizacao_cpu: Optional[float] = .0
     utilizacao_gpu: Optional[float] = .0
     utilizacao_memoria: Optional[float] = .0
-    versao_modelo: Optional[str] = ""
+    versao_modelo: Optional[str] = " "
 
 
 def handle_train_and_evaluate_model(params: Dict, run_state: pd.DataFrame, delta_path: str) -> str:
