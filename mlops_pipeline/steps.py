@@ -169,8 +169,7 @@ def init_pipeline(params: Dict) -> str:
             "utilizacao_gpu": .0,
             "utilizacao_memoria": .0,
             "tipo_esteira": tipo_esteira,
-            "email_usuario": email_usuario,
-            "data_criacao": datetime.now(saopaulo_timezone)
+            "email_usuario": email_usuario
         }])
         set_pipeline_run_state(run_state, delta_path)
         return "white"

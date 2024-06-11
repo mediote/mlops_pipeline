@@ -1,7 +1,12 @@
+from datetime import datetime
+
 import pandas as pd
+import pytz
 from pyspark.sql import SparkSession
 
 spark = SparkSession.builder.appName("mlops_pipeline").getOrCreate()
+
+saopaulo_timezone = pytz.timezone("America/Sao_Paulo")
 
 
 def get_pipeline_run_state(nome_modal: str, nome_projeto: str, nome_modelo: str, delta_path: str) -> pd.DataFrame:
@@ -51,6 +56,7 @@ def set_pipeline_run_state(run_state: pd.DataFrame,  delta_path: str):
     try:
         # Cria um Spark DataFrame a partir do pandas DataFrame
         sdf = spark.createDataFrame(run_state)
+        sdf["data_criacao"] = datetime.now(saopaulo_timezone)
         # Escreve no Delta Lake
         sdf.write.format("delta").mode('append').save(delta_path)
     except Exception as e:
