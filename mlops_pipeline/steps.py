@@ -109,6 +109,15 @@ def init_pipeline(params: Dict) -> str:
                 set_pipeline_run_state(run_state, delta_path)
                 return status_execucao_pipeline
             else:
+                run_state["nome_etapa_pipeline"] = "Inicializa Pipeline"
+                run_state["resumo_execucao_etapa"] = "Pipeline Interrompido / Intervencao Manual"
+                run_state["id_pipeline"] = run_state["id_pipeline"].iloc[0] + 1
+                run_state["id_etapa_pipeline"] = 0
+                run_state["data_inicio_etapa_pipeline"] = data_inicio_etapa_pipeline
+                run_state["data_fim_etapa_pipeline"] = datetime.now(
+                    saopaulo_timezone)
+                run_state["status_execucao_pipeline"] = "red"
+                set_pipeline_run_state(run_state, delta_path)
                 return "red"
         elif run_state["qtd_medida_retreino"].iloc[0] >= qtd_permitida_retreino:
             run_state["id_pipeline"] = run_state["id_pipeline"].iloc[0] + 1
