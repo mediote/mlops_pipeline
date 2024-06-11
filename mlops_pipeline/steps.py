@@ -289,11 +289,11 @@ def handle_train_and_evaluate_model(params: Dict, run_state: pd.DataFrame, delta
             run_state["versao_modelo"] = versao_modelo
             exit_message = 'end_loop'
         else:
-            if run_state['passo_etapa_retreino_modelo'][0] < 3:
+            if run_state['passo_etapa_retreino_modelo'].iloc[0] < 3:
                 run_state["resumo_execucao_etapa"] = "Retreino por Desempenho"
                 run_state['status_execucao_pipeline'] = 'yellow'
                 run_state['status_modelo'] = 'white'
-                run_state['passo_etapa_retreino_modelo'] = run_state['passo_etapa_retreino_modelo'][0] + 1
+                run_state['passo_etapa_retreino_modelo'] = run_state['passo_etapa_retreino_modelo'].iloc[0] + 1
                 run_state["data_fim_etapa_pipeline"] = now
                 exit_message = 'continue_loop'
             else:
