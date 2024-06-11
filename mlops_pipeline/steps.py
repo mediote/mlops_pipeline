@@ -271,7 +271,7 @@ def handle_train_and_evaluate_model(params: Dict, run_state: pd.DataFrame, delta
 
     if run_state is not None:
         run_state["data_inicio_etapa_pipeline"] = data_inicio_etapa_pipeline
-        run_state['id_etapa_pipeline'] = run_state['id_etapa_pipeline'][0] + 1
+        run_state['id_etapa_pipeline'] = run_state['id_etapa_pipeline'].iloc[0] + 1
         run_state['valor_medido_acc'] = valor_medido_acc
         run_state['duracao_treinamento_modelo'] = duracao_treinamento_modelo
         run_state['nome_modelo'] = nome_modelo
