@@ -97,7 +97,7 @@ def init_pipeline(params: Dict) -> str:
         data_validade_modelo = run_state["data_validade_modelo"].iloc[0]
 
         if datetime.strptime(data_validade_modelo, "%Y-%m-%d").date() > now.date() and run_state["qtd_medida_retreino"].iloc[0] <= qtd_permitida_retreino:
-            if run_state["status_execucao_pipeline"].iloc[0] in ["white", "green"]:
+            if run_state["status_execucao_pipeline"].iloc[0] == "green":
                 status_execucao_pipeline = run_state["status_execucao_pipeline"].iloc[0]
                 run_state["resumo_execucao_etapa"] = "Preparando para drift/predicao"
                 run_state["id_pipeline"] = run_state["id_pipeline"].iloc[0] + 1
