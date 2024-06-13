@@ -12,6 +12,8 @@ setup(
         "tox==4.15.1",
         "pyspark==3.5.1",
         "pyodbc>=4.0.0",
-        "pytest-mock>=3.0.0"
+        "pytest-mock>=3.0.0",
+        "GPUtil==1.4.0",
+        "psutil==5.9.8"
     ]
 )
