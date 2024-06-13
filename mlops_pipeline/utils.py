@@ -53,10 +53,10 @@ def get_cluster_computation_usage(end_time):
         else:
             gpu_usages.append(0)  # Se não houver GPU disponível
 
-        time.sleep(1)  # Aguardar 1 segundo entre medições
+        time.sleep(0.2)  # Aguardar 1 segundo entre medições
 
-    avg_cpu_usage = sum(cpu_usages) / len(cpu_usages)
-    avg_memory_usage = sum(memory_usages) / len(memory_usages)
-    avg_gpu_usage = sum(gpu_usages) / len(gpu_usages)
+    avg_cpu_usage = round(sum(cpu_usages) / len(cpu_usages), 2)
+    avg_memory_usage = round(sum(memory_usages) / len(memory_usages), 2)
+    avg_gpu_usage = round(sum(gpu_usages) / len(gpu_usages), 2)
 
     return avg_cpu_usage, avg_memory_usage, avg_gpu_usage
