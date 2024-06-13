@@ -4,6 +4,9 @@ from datetime import datetime
 import GPUtil
 import pandas as pd
 import psutil
+import pytz
+
+saopaulo_timezone = pytz.timezone("America/Sao_Paulo")
 
 
 def get_model_remaining_validity_percentage(run_state: pd.DataFrame) -> float:
@@ -40,7 +43,7 @@ def get_cluster_computation_usage(end_time):
     memory_usages = []
     gpu_usages = []
 
-    while datetime.now() < end_time:
+    while datetime.now(saopaulo_timezone) < end_time:
         cpu_usages.append(psutil.cpu_percent(interval=1))
         memory_usages.append(psutil.virtual_memory().percent)
 
