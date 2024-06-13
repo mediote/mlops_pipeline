@@ -103,6 +103,7 @@ def init_pipeline(params: Dict) -> str:
                 run_state["resumo_execucao_etapa"] = "Preparacao para Dift/Predict"
                 run_state["id_pipeline"] = run_state["id_pipeline"].iloc[0] + 1
                 run_state["id_etapa_pipeline"] = 0
+                run_state["qtd_dados_predicao"] = 0
                 run_state["data_inicio_etapa_pipeline"] = data_inicio_etapa_pipeline
                 run_state["data_fim_etapa_pipeline"] = datetime.now(
                     saopaulo_timezone)
@@ -378,7 +379,6 @@ def handle_drift_and_predict(params: Dict, run_state: pd.DataFrame, delta_path: 
             run_state['passo_etapa_retreino_modelo'] = run_state['passo_etapa_retreino_modelo'].iloc[0] + 1
             run_state["status_execucao_pipeline"] = "yellow"
             run_state["resumo_execucao_etapa"] = "Com Drift / Preparando Retreino"
-            run_state['qtd_permitida_retreino'] = run_state['qtd_permitida_retreino'].iloc[0] + 1
             run_state["status_execucao_pipeline"] = status_modelo
 
         set_pipeline_run_state(run_state, delta_path)
