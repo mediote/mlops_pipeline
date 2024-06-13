@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 
 import GPUtil
@@ -34,7 +35,7 @@ def get_model_remaining_validity_percentage(run_state: pd.DataFrame) -> float:
     return remaining_validity_percentage
 
 
-def get_cluster_computation_usage(start_time, end_time):
+def get_cluster_computation_usage(end_time):
     cpu_usages = []
     memory_usages = []
     gpu_usages = []
@@ -45,7 +46,7 @@ def get_cluster_computation_usage(start_time, end_time):
 
         gpus = GPUtil.getGPUs()
         if gpus:
-            gpu_usages.append(gpus[0].load * 100)  # Assumindo uma única GPU
+            gpu_usages.append(sum([gpu.load for gpu in gpus]) / len(gpus) * 100)
         else:
             gpu_usages.append(0)  # Se não houver GPU disponível
 
