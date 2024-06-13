@@ -25,6 +25,8 @@ def get_model_remaining_validity_percentage(run_state: pd.DataFrame) -> float:
         remaining_validity_percentage = round(
             (days_until_expiration / model_validity_days) * 100, 2
         )
+        # Garantir que o percentual esteja entre 0 e 100
+        remaining_validity_percentage = max(0, min(remaining_validity_percentage, 100))
     else:
         remaining_validity_percentage = 0
     return remaining_validity_percentage

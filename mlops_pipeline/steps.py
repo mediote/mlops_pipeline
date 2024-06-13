@@ -110,7 +110,7 @@ def init_pipeline(params: Dict) -> str:
                 return status_execucao_pipeline
             else:
                 run_state["nome_etapa_pipeline"] = "Inicializa Pipeline"
-                run_state["resumo_execucao_etapa"] = "Pipeline Interrompido / Intervencao Manual"
+                run_state["resumo_execucao_etapa"] = "Pipeline Interrompido/Requer Intervencao Manual"
                 run_state["id_pipeline"] = run_state["id_pipeline"].iloc[0] + 1
                 run_state["id_etapa_pipeline"] = 0
                 run_state["data_inicio_etapa_pipeline"] = data_inicio_etapa_pipeline
@@ -301,7 +301,7 @@ def handle_train_and_evaluate_model(params: Dict, run_state: pd.DataFrame, delta
             if run_state['passo_etapa_retreino_modelo'].iloc[0] < 3:
                 run_state["resumo_execucao_etapa"] = "Retreino por Desempenho"
                 run_state['status_execucao_pipeline'] = 'yellow'
-                run_state['status_modelo'] = 'white'
+                run_state['status_modelo'] = 'yellow'
                 run_state['passo_etapa_retreino_modelo'] = run_state['passo_etapa_retreino_modelo'].iloc[0] + 1
                 run_state["data_fim_etapa_pipeline"] = now
                 exit_message = 'continue_loop'
