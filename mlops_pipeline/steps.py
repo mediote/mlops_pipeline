@@ -350,7 +350,7 @@ def handle_drift_and_predict(params: Dict, run_state: pd.DataFrame, delta_path: 
     valor_medido_drift = validated_params.valor_medido_drift
     qtd_dados_predicao = validated_params.qtd_dados_predicao
     utilizacao_cpu = validated_params.utilizacao_cpu
-    utilizacao_gpu = validated_params.utilizacao_cpu
+    utilizacao_gpu = validated_params.utilizacao_gpu
     utilizacao_memoria = validated_params.utilizacao_memoria
 
     now = datetime.now(saopaulo_timezone)
